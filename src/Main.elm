@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Array exposing (Array)
 import Browser
 import Element exposing (..)
 import Element.Background as Background
@@ -28,7 +29,7 @@ type ThemeColor
 
 
 type alias Model =
-    { colors : List ThemeColor }
+    { colors : Array ThemeColor }
 
 
 type alias NormalizedColor =
@@ -116,10 +117,11 @@ main =
 init : Model
 init =
     { colors =
-        [ ThemeColorRgb <| rgb255 0 0 0
-        , ThemeColorRgb <| rgb255 100 200 150
-        , ThemeColorRgb <| rgb255 255 255 255
-        ]
+        Array.fromList
+            [ ThemeColorRgb <| rgb255 0 0 0
+            , ThemeColorRgb <| rgb255 100 200 150
+            , ThemeColorRgb <| rgb255 255 255 255
+            ]
     }
 
 
@@ -173,7 +175,10 @@ view model =
 appView : Model -> Element Msg
 appView model =
     column [ spacingDefault ]
-        (List.map themeColorView model.colors)
+        (model.colors
+            |> Array.toList
+            |> List.map themeColorView
+        )
 
 
 themeColorView : ThemeColor -> Element Msg
