@@ -119,8 +119,11 @@ init =
     { colors =
         Array.fromList
             [ ThemeColorRgb <| rgb255 0 0 0
-            , ThemeColorRgb <| rgb255 100 200 150
-            , ThemeColorRgb <| rgb255 255 255 255
+            , ThemeColorRgb <| rgb255 50 0 0
+            , ThemeColorRgb <| rgb255 100 0 0
+            , ThemeColorRgb <| rgb255 150 0 0
+            , ThemeColorRgb <| rgb255 200 0 0
+            , ThemeColorRgb <| rgb255 250 0 0
             ]
     }
 
@@ -174,7 +177,7 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
-    column [ spacingDefault ]
+    column []
         (model.colors
             |> Array.toList
             |> List.map themeColorView
@@ -188,6 +191,12 @@ themeColorView tc =
             normalizeColor tc
     in
     row [ spacingDefault ]
-        [ text <| rgbToString color.rgb
+        [ el
+            [ Background.color color.rgb
+            , width <| px (rem * 3)
+            , height <| px (rem * 2)
+            ]
+            (text "")
+        , text <| rgbToString color.rgb
         , text <| hsluvToString color.hsluv
         ]
