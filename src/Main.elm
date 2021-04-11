@@ -23,6 +23,7 @@ import Round
 type Msg
     = GotRgbInput Int Int String
     | GotHsluvInput Int Int String
+    | RemoveColorSetItem Int Int
 
 
 type ThemeColor
@@ -202,6 +203,9 @@ update msg model =
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
+        RemoveColorSetItem setId itemId ->
+            { model | colorSets = removeColorSetItem setId itemId model.colorSets }
+
 
 updateColorSetItem :
     Int
@@ -213,6 +217,15 @@ updateColorSetItem setId itemId updateItem colorSets =
     let
         updateColorSet set =
             { set | items = Array.update itemId updateItem set.items }
+    in
+    Array.update setId updateColorSet colorSets
+
+
+removeColorSetItem : Int -> Int -> Array ColorSet -> Array ColorSet
+removeColorSetItem setId itemId colorSets =
+    let
+        updateColorSet set =
+            { set | items = Array.removeAt itemId set.items }
     in
     Array.update setId updateColorSet colorSets
 
@@ -264,7 +277,11 @@ appView model =
 
 colorSetView : Int -> ColorSet -> Element Msg
 colorSetView setId colorSet =
-    column [ spacingDefault, width fill ]
+    column
+        [ spacingDefault
+        , width fill
+        , alignTop
+        ]
         [ text colorSet.name
         , column []
             (colorSet.items
@@ -300,5 +317,10 @@ colorSetItemView setId itemId item =
             , onChange = GotHsluvInput setId itemId
             , text = item.hsluvInput
             , placeholder = Nothing
+            }
+        , Input.button
+            []
+            { onPress = Just <| RemoveColorSetItem setId itemId
+            , label = text "Remove"
             }
         ]
