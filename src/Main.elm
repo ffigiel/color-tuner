@@ -9,6 +9,7 @@ import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
 import HSLuv exposing (HSLuv)
+import Hex
 import Html exposing (Html)
 
 
@@ -16,9 +17,17 @@ import Html exposing (Html)
 -- TYPES
 
 
+type Msg
+    = None
+
+
 type ThemeColor
-    = ThemeColorRGB Color
+    = ThemeColorRgb Color
     | ThemeColorHSLuv HSLuv
+
+
+type alias Model =
+    { colors : List ThemeColor }
 
 
 type alias NormalizedColor =
@@ -30,9 +39,9 @@ type alias NormalizedColor =
 normalizeColor : ThemeColor -> NormalizedColor
 normalizeColor tc =
     case tc of
-        ThemeColorRGB color ->
-            { rgb = color
-            , hsluv = toRgb color |> HSLuv.rgba
+        ThemeColorRgb rgb ->
+            { rgb = rgb
+            , hsluv = toRgb rgb |> HSLuv.rgba
             }
 
         ThemeColorHSLuv hsluv ->
@@ -41,12 +50,23 @@ normalizeColor tc =
             }
 
 
-type alias Model =
-    { colors : List ThemeColor }
+rgbToString : Color -> String
+rgbToString color =
+    let
+        components =
+            toRgb color
 
-
-type Msg
-    = None
+        componentToString : Float -> String
+        componentToString =
+            (*) 255
+                >> floor
+                >> Hex.toString
+                >> String.padLeft 2 '0'
+    in
+    [ components.red, components.green, components.blue ]
+        |> List.map componentToString
+        |> String.join ""
+        |> (++) "#"
 
 
 
@@ -69,7 +89,9 @@ main =
 init : Model
 init =
     { colors =
-        [ ThemeColorRGB <| rgb255 100 200 150
+        [ ThemeColorRgb <| rgb255 0 0 0
+        , ThemeColorRgb <| rgb255 100 200 150
+        , ThemeColorRgb <| rgb255 255 255 255
         ]
     }
 
@@ -134,6 +156,6 @@ themeColorView tc =
             normalizeColor tc
     in
     row [ spacingDefault ]
-        [ text <| Debug.toString color.rgb
+        [ text <| rgbToString color.rgb
         , text <| Debug.toString color.hsluv
         ]
