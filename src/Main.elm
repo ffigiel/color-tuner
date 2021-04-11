@@ -212,7 +212,7 @@ appView model =
 
 colorSetView : ColorSet -> Element Msg
 colorSetView colorSet =
-    column [ spacingDefault ]
+    column [ spacingDefault, width fill ]
         [ text colorSet.name
         , column []
             (colorSet.colors
@@ -232,9 +232,21 @@ colorView tc =
         [ el
             [ Background.color color.rgb
             , width <| px (rem * 3)
-            , height <| px (rem * 2)
+            , height <| px (rem * 3)
             ]
             (text "")
-        , text <| rgbToString color.rgb
-        , text <| hsluvToString color.hsluv
+        , Input.text
+            []
+            { label = Input.labelHidden "RGB"
+            , onChange = always None
+            , text = rgbToString color.rgb
+            , placeholder = Nothing
+            }
+        , Input.text
+            []
+            { label = Input.labelHidden "HSLuv"
+            , onChange = always None
+            , text = hsluvToString color.hsluv
+            , placeholder = Nothing
+            }
         ]
