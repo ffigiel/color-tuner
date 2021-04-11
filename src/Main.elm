@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Array exposing (Array)
+import Array.Extra as Array
 import Browser
 import Element exposing (..)
 import Element.Background as Background
@@ -20,7 +21,8 @@ import Round
 
 
 type Msg
-    = None
+    = GotRgbInput Int Int String
+    | GotHsluvInput Int Int String
 
 
 type ThemeColor
@@ -34,7 +36,14 @@ type alias Model =
 
 type alias ColorSet =
     { name : String
-    , colors : Array ThemeColor
+    , items : Array ColorSetItem
+    }
+
+
+type alias ColorSetItem =
+    { color : ThemeColor
+    , rgbInput : String
+    , hsluvInput : String
     }
 
 
@@ -122,33 +131,51 @@ main =
 
 init : Model
 init =
+    let
+        rgbColors =
+            [ ThemeColorRgb <| rgb255 0 0 0
+            , ThemeColorRgb <| rgb255 50 0 0
+            , ThemeColorRgb <| rgb255 100 0 0
+            , ThemeColorRgb <| rgb255 150 0 0
+            , ThemeColorRgb <| rgb255 200 0 0
+            , ThemeColorRgb <| rgb255 250 0 0
+            ]
+
+        hsluvColors =
+            List.range 0 5
+                |> List.map
+                    (\n ->
+                        { hue = 12.18
+                        , saturation = 100
+                        , lightness = 10.442 * toFloat n
+                        , alpha = 1
+                        }
+                            |> HSLuv.hsluv360
+                            |> ThemeColorHSLuv
+                    )
+
+        colorsToItems colors =
+            colors
+                |> List.map
+                    (\c ->
+                        let
+                            color =
+                                normalizeColor c
+                        in
+                        { color = c
+                        , rgbInput = rgbToString color.rgb
+                        , hsluvInput = hsluvToString color.hsluv
+                        }
+                    )
+                |> Array.fromList
+    in
     { colorSets =
         Array.fromList
             [ { name = "rgb"
-              , colors =
-                    Array.fromList
-                        [ ThemeColorRgb <| rgb255 0 0 0
-                        , ThemeColorRgb <| rgb255 50 0 0
-                        , ThemeColorRgb <| rgb255 100 0 0
-                        , ThemeColorRgb <| rgb255 150 0 0
-                        , ThemeColorRgb <| rgb255 200 0 0
-                        , ThemeColorRgb <| rgb255 250 0 0
-                        ]
+              , items = colorsToItems rgbColors
               }
             , { name = "hsluv"
-              , colors =
-                    List.range 0 5
-                        |> List.map
-                            (\n ->
-                                { hue = 12.18
-                                , saturation = 100
-                                , lightness = 10.442 * toFloat n
-                                , alpha = 1
-                                }
-                                    |> HSLuv.hsluv360
-                                    |> ThemeColorHSLuv
-                            )
-                        |> Array.fromList
+              , items = colorsToItems hsluvColors
               }
             ]
     }
@@ -161,8 +188,33 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        _ ->
-            model
+        GotRgbInput setId itemId value ->
+            let
+                updateItem item =
+                    { item | rgbInput = value }
+            in
+            { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
+
+        GotHsluvInput setId itemId value ->
+            let
+                updateItem item =
+                    { item | hsluvInput = value }
+            in
+            { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
+
+
+updateColorSetItem :
+    Int
+    -> Int
+    -> (ColorSetItem -> ColorSetItem)
+    -> Array ColorSet
+    -> Array ColorSet
+updateColorSetItem setId itemId updateItem colorSets =
+    let
+        updateColorSet set =
+            { set | items = Array.update itemId updateItem set.items }
+    in
+    Array.update setId updateColorSet colorSets
 
 
 
@@ -206,27 +258,27 @@ appView model =
     row [ spacingDefault ]
         (model.colorSets
             |> Array.toList
-            |> List.map colorSetView
+            |> List.indexedMap colorSetView
         )
 
 
-colorSetView : ColorSet -> Element Msg
-colorSetView colorSet =
+colorSetView : Int -> ColorSet -> Element Msg
+colorSetView setId colorSet =
     column [ spacingDefault, width fill ]
         [ text colorSet.name
         , column []
-            (colorSet.colors
+            (colorSet.items
                 |> Array.toList
-                |> List.map colorView
+                |> List.indexedMap (colorSetItemView setId)
             )
         ]
 
 
-colorView : ThemeColor -> Element Msg
-colorView tc =
+colorSetItemView : Int -> Int -> ColorSetItem -> Element Msg
+colorSetItemView setId itemId item =
     let
         color =
-            normalizeColor tc
+            normalizeColor item.color
     in
     row [ spacingDefault ]
         [ el
@@ -238,15 +290,15 @@ colorView tc =
         , Input.text
             []
             { label = Input.labelHidden "RGB"
-            , onChange = always None
-            , text = rgbToString color.rgb
+            , onChange = GotRgbInput setId itemId
+            , text = item.rgbInput
             , placeholder = Nothing
             }
         , Input.text
             []
             { label = Input.labelHidden "HSLuv"
-            , onChange = always None
-            , text = hsluvToString color.hsluv
+            , onChange = GotHsluvInput setId itemId
+            , text = item.hsluvInput
             , placeholder = Nothing
             }
         ]
