@@ -11,6 +11,7 @@ import Element.Region as Region
 import HSLuv exposing (HSLuv)
 import Hex
 import Html exposing (Html)
+import Round
 
 
 
@@ -67,6 +68,32 @@ rgbToString color =
         |> List.map componentToString
         |> String.join ""
         |> (++) "#"
+
+
+hsluvToString : HSLuv -> String
+hsluvToString color =
+    let
+        components =
+            HSLuv.toHsluv color
+
+        stringComponents =
+            [ components.hue * 360
+            , components.saturation * 100
+            , components.lightness * 100
+            ]
+                |> List.map smartRound
+
+        smartRound : Float -> String
+        smartRound n =
+            if n == toFloat (floor n) then
+                Round.round 0 n
+
+            else
+                Round.round 1 n
+    in
+    "hsluv("
+        ++ String.join ", " stringComponents
+        ++ ")"
 
 
 
@@ -157,5 +184,5 @@ themeColorView tc =
     in
     row [ spacingDefault ]
         [ text <| rgbToString color.rgb
-        , text <| Debug.toString color.hsluv
+        , text <| hsluvToString color.hsluv
         ]
