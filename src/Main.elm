@@ -29,7 +29,13 @@ type ThemeColor
 
 
 type alias Model =
-    { colors : Array ThemeColor }
+    { colorSets : Array ColorSet }
+
+
+type alias ColorSet =
+    { name : String
+    , colors : Array ThemeColor
+    }
 
 
 type alias NormalizedColor =
@@ -90,7 +96,7 @@ hsluvToString color =
                 Round.round 0 n
 
             else
-                Round.round 1 n
+                Round.round 2 n
     in
     "hsluv("
         ++ String.join ", " stringComponents
@@ -116,14 +122,34 @@ main =
 
 init : Model
 init =
-    { colors =
+    { colorSets =
         Array.fromList
-            [ ThemeColorRgb <| rgb255 0 0 0
-            , ThemeColorRgb <| rgb255 50 0 0
-            , ThemeColorRgb <| rgb255 100 0 0
-            , ThemeColorRgb <| rgb255 150 0 0
-            , ThemeColorRgb <| rgb255 200 0 0
-            , ThemeColorRgb <| rgb255 250 0 0
+            [ { name = "rgb"
+              , colors =
+                    Array.fromList
+                        [ ThemeColorRgb <| rgb255 0 0 0
+                        , ThemeColorRgb <| rgb255 50 0 0
+                        , ThemeColorRgb <| rgb255 100 0 0
+                        , ThemeColorRgb <| rgb255 150 0 0
+                        , ThemeColorRgb <| rgb255 200 0 0
+                        , ThemeColorRgb <| rgb255 250 0 0
+                        ]
+              }
+            , { name = "hsluv"
+              , colors =
+                    List.range 0 5
+                        |> List.map
+                            (\n ->
+                                { hue = 12.18
+                                , saturation = 100
+                                , lightness = 10.442 * toFloat n
+                                , alpha = 1
+                                }
+                                    |> HSLuv.hsluv360
+                                    |> ThemeColorHSLuv
+                            )
+                        |> Array.fromList
+              }
             ]
     }
 
@@ -177,15 +203,27 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
-    column []
-        (model.colors
+    row [ spacingDefault ]
+        (model.colorSets
             |> Array.toList
-            |> List.map themeColorView
+            |> List.map colorSetView
         )
 
 
-themeColorView : ThemeColor -> Element Msg
-themeColorView tc =
+colorSetView : ColorSet -> Element Msg
+colorSetView colorSet =
+    column [ spacingDefault ]
+        [ text colorSet.name
+        , column []
+            (colorSet.colors
+                |> Array.toList
+                |> List.map colorView
+            )
+        ]
+
+
+colorView : ThemeColor -> Element Msg
+colorView tc =
     let
         color =
             normalizeColor tc
