@@ -24,6 +24,7 @@ type Msg
     = GotRgbInput Int Int String
     | GotHsluvInput Int Int String
     | RemoveColorSetItem Int Int
+    | AddColorSetItem Int
 
 
 type ThemeColor
@@ -51,6 +52,18 @@ type alias ColorSetItem =
 type alias NormalizedColor =
     { rgb : Color
     , hsluv : HSLuv
+    }
+
+
+newColorSetItem : ThemeColor -> ColorSetItem
+newColorSetItem c =
+    let
+        color =
+            normalizeColor c
+    in
+    { color = c
+    , rgbInput = rgbToString color.rgb
+    , hsluvInput = hsluvToString color.hsluv
     }
 
 
@@ -157,17 +170,7 @@ init =
 
         colorsToItems colors =
             colors
-                |> List.map
-                    (\c ->
-                        let
-                            color =
-                                normalizeColor c
-                        in
-                        { color = c
-                        , rgbInput = rgbToString color.rgb
-                        , hsluvInput = hsluvToString color.hsluv
-                        }
-                    )
+                |> List.map newColorSetItem
                 |> Array.fromList
     in
     { colorSets =
@@ -206,6 +209,13 @@ update msg model =
         RemoveColorSetItem setId itemId ->
             { model | colorSets = removeColorSetItem setId itemId model.colorSets }
 
+        AddColorSetItem setId ->
+            let
+                newItem =
+                    newColorSetItem <| ThemeColorRgb <| rgb 0 0 0
+            in
+            { model | colorSets = addColorSetItem setId newItem model.colorSets }
+
 
 updateColorSetItem :
     Int
@@ -226,6 +236,15 @@ removeColorSetItem setId itemId colorSets =
     let
         updateColorSet set =
             { set | items = Array.removeAt itemId set.items }
+    in
+    Array.update setId updateColorSet colorSets
+
+
+addColorSetItem : Int -> ColorSetItem -> Array ColorSet -> Array ColorSet
+addColorSetItem setId newItem colorSets =
+    let
+        updateColorSet set =
+            { set | items = Array.push newItem set.items }
     in
     Array.update setId updateColorSet colorSets
 
@@ -277,6 +296,21 @@ appView model =
 
 colorSetView : Int -> ColorSet -> Element Msg
 colorSetView setId colorSet =
+    let
+        renderedItems =
+            colorSet.items
+                |> Array.toList
+                |> List.indexedMap (colorSetItemView setId)
+
+        addNewButton =
+            Input.button
+                [ width <| px (rem * 3)
+                , height <| px (rem * 3)
+                ]
+                { onPress = Just <| AddColorSetItem setId
+                , label = el [ centerX, centerY ] <| text "Add"
+                }
+    in
     column
         [ spacingDefault
         , width fill
@@ -284,10 +318,7 @@ colorSetView setId colorSet =
         ]
         [ text colorSet.name
         , column []
-            (colorSet.items
-                |> Array.toList
-                |> List.indexedMap (colorSetItemView setId)
-            )
+            (renderedItems ++ [ addNewButton ])
         ]
 
 
