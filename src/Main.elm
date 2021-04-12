@@ -390,7 +390,7 @@ view model =
         column
             [ spacingDefault
             , paddingDefault
-            , width (fill |> maximum (rem * 80))
+            , width (fill |> maximum (rem * 100))
             , height fill
             , centerX
             ]
@@ -400,7 +400,7 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
-    row [ spacingDefault ]
+    row [ spacingDefault, width fill ]
         (model.colorSets
             |> Array.toList
             |> List.indexedMap colorSetView
@@ -430,7 +430,7 @@ colorSetView setId colorSet =
         , alignTop
         ]
         [ text colorSet.name
-        , column []
+        , column [ width fill ]
             (renderedItems ++ [ addNewButton ])
         ]
 
@@ -441,7 +441,7 @@ colorSetItemView setId itemId item =
         color =
             normalizeColor item.color
     in
-    row [ spacingDefault ]
+    row [ spacingDefault, width fill ]
         [ el
             [ Background.color color.rgb
             , width <| px (rem * 3)
@@ -478,7 +478,7 @@ colorSetItemInput :
 colorSetItemInput { label, onChange, text, valid } =
     let
         baseAttrs =
-            [ Font.family [ Font.monospace ] ]
+            [ Font.family [ Font.monospace ], width fill ]
 
         attrs =
             if valid then
