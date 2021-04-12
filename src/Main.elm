@@ -85,6 +85,37 @@ normalizeColor tc =
             }
 
 
+parseRgb : String -> Maybe Color
+parseRgb s =
+    let
+        cleanStr =
+            s
+                |> String.trim
+                |> String.replace "#" ""
+
+        resultR =
+            Hex.fromString <| String.slice 0 2 cleanStr
+
+        resultG =
+            Hex.fromString <| String.slice 2 4 cleanStr
+
+        resultB =
+            Hex.fromString <| String.slice 4 6 cleanStr
+    in
+    if String.length cleanStr == 6 then
+        Result.map3
+            (\r g b ->
+                Just <| rgb255 r g b
+            )
+            resultR
+            resultG
+            resultB
+            |> Result.withDefault Nothing
+
+    else
+        Nothing
+
+
 rgbToString : Color -> String
 rgbToString color =
     let
@@ -199,7 +230,20 @@ update msg model =
         GotRgbInput setId itemId value ->
             let
                 updateItem item =
-                    { item | rgbInput = value }
+                    let
+                        ( newColor, newValid ) =
+                            case parseRgb value of
+                                Just color ->
+                                    ( ThemeColorRgb color, True )
+
+                                Nothing ->
+                                    ( item.color, False )
+                    in
+                    { item
+                        | color = newColor
+                        , rgbInput = value
+                        , rgbValid = newValid
+                    }
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
