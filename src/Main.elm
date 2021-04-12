@@ -335,19 +335,15 @@ colorSetItemView setId itemId item =
             , height <| px (rem * 3)
             ]
             (text "")
-        , Input.text
-            []
-            { label = Input.labelHidden "RGB"
+        , colorSetItemInput
+            { label = "RGB"
             , onChange = GotRgbInput setId itemId
             , text = item.rgbInput
-            , placeholder = Nothing
             }
-        , Input.text
-            []
-            { label = Input.labelHidden "HSLuv"
+        , colorSetItemInput
+            { label = "HSLuv"
             , onChange = GotHsluvInput setId itemId
             , text = item.hsluvInput
-            , placeholder = Nothing
             }
         , Input.button
             []
@@ -355,3 +351,19 @@ colorSetItemView setId itemId item =
             , label = text "Remove"
             }
         ]
+
+
+colorSetItemInput :
+    { label : String
+    , onChange : String -> Msg
+    , text : String
+    }
+    -> Element Msg
+colorSetItemInput { label, onChange, text } =
+    Input.text
+        [ Font.family [ Font.monospace ] ]
+        { label = Input.labelHidden label
+        , onChange = onChange
+        , text = text
+        , placeholder = Nothing
+        }
