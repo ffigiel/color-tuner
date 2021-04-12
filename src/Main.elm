@@ -13,6 +13,7 @@ import Element.Region as Region
 import HSLuv exposing (HSLuv)
 import Hex
 import Html exposing (Html)
+import Parser exposing ((|.), (|=), Parser)
 import Round
 
 
@@ -105,12 +106,12 @@ parseRgb s =
     if String.length cleanStr == 6 then
         Result.map3
             (\r g b ->
-                Just <| rgb255 r g b
+                rgb255 r g b
             )
             resultR
             resultG
             resultB
-            |> Result.withDefault Nothing
+            |> Result.toMaybe
 
     else
         Nothing
@@ -133,6 +134,41 @@ rgbToString color =
         |> List.map componentToString
         |> String.join ""
         |> (++) "#"
+
+
+parseHsluv : String -> Maybe HSLuv
+parseHsluv s =
+    s
+        |> String.toLower
+        |> Parser.run hsluvParser
+        |> Result.toMaybe
+
+
+hsluvParser : Parser HSLuv
+hsluvParser =
+    let
+        hsluvFromFloats h s l =
+            HSLuv.hsluv360
+                { hue = h
+                , saturation = s
+                , lightness = l
+                , alpha = 1
+                }
+    in
+    Parser.succeed hsluvFromFloats
+        |. Parser.symbol "hsluv("
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.spaces
+        |. Parser.symbol ")"
 
 
 hsluvToString : HSLuv -> String
@@ -250,7 +286,20 @@ update msg model =
         GotHsluvInput setId itemId value ->
             let
                 updateItem item =
-                    { item | hsluvInput = value }
+                    let
+                        ( newColor, newValid ) =
+                            case parseHsluv value of
+                                Just color ->
+                                    ( ThemeColorHSLuv color, True )
+
+                                Nothing ->
+                                    ( item.color, False )
+                    in
+                    { item
+                        | color = newColor
+                        , hsluvInput = value
+                        , hsluvValid = newValid
+                    }
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
