@@ -45,7 +45,9 @@ type alias ColorSet =
 type alias ColorSetItem =
     { color : ThemeColor
     , rgbInput : String
+    , rgbValid : Bool
     , hsluvInput : String
+    , hsluvValid : Bool
     }
 
 
@@ -63,7 +65,9 @@ newColorSetItem c =
     in
     { color = c
     , rgbInput = rgbToString color.rgb
+    , rgbValid = True
     , hsluvInput = hsluvToString color.hsluv
+    , hsluvValid = True
     }
 
 
@@ -258,6 +262,11 @@ rem =
     16
 
 
+errColor : Color
+errColor =
+    rgb255 220 0 0
+
+
 spacingDefault : Attribute Msg
 spacingDefault =
     spacing <| rem * 2
@@ -339,11 +348,13 @@ colorSetItemView setId itemId item =
             { label = "RGB"
             , onChange = GotRgbInput setId itemId
             , text = item.rgbInput
+            , valid = item.rgbValid
             }
         , colorSetItemInput
             { label = "HSLuv"
             , onChange = GotHsluvInput setId itemId
             , text = item.hsluvInput
+            , valid = item.hsluvValid
             }
         , Input.button
             []
@@ -357,11 +368,23 @@ colorSetItemInput :
     { label : String
     , onChange : String -> Msg
     , text : String
+    , valid : Bool
     }
     -> Element Msg
-colorSetItemInput { label, onChange, text } =
+colorSetItemInput { label, onChange, text, valid } =
+    let
+        baseAttrs =
+            [ Font.family [ Font.monospace ] ]
+
+        attrs =
+            if valid then
+                baseAttrs
+
+            else
+                Border.color errColor :: baseAttrs
+    in
     Input.text
-        [ Font.family [ Font.monospace ] ]
+        attrs
         { label = Input.labelHidden label
         , onChange = onChange
         , text = text
