@@ -77,13 +77,24 @@ normalizeColor tc =
     case tc of
         ThemeColorRgb rgb ->
             { rgb = rgb
-            , hsluv = toRgb rgb |> HSLuv.rgba
+            , hsluv = rgbToHsluv rgb
             }
 
         ThemeColorHSLuv hsluv ->
-            { rgb = HSLuv.toRgba hsluv |> fromRgb
+            { rgb = hsluvToRgb hsluv
             , hsluv = hsluv
             }
+
+
+rgbToHsluv : Color -> HSLuv
+rgbToHsluv rgb =
+    toRgb rgb |> HSLuv.rgba
+
+
+hsluvToRgb : HSLuv -> Color
+hsluvToRgb hsluv =
+    HSLuv.toRgba hsluv
+        |> fromRgb
 
 
 parseRgb : String -> Maybe Color
@@ -267,19 +278,19 @@ update msg model =
             let
                 updateItem item =
                     let
-                        ( newColor, newValid ) =
+                        newItem =
                             case parseRgb value of
                                 Just color ->
-                                    ( ThemeColorRgb color, True )
+                                    { item
+                                        | rgbValid = True
+                                        , color = ThemeColorRgb color
+                                        , hsluvInput = hsluvToString <| rgbToHsluv color
+                                    }
 
                                 Nothing ->
-                                    ( item.color, False )
+                                    { item | rgbValid = False }
                     in
-                    { item
-                        | color = newColor
-                        , rgbInput = value
-                        , rgbValid = newValid
-                    }
+                    { newItem | rgbInput = value }
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
@@ -287,19 +298,19 @@ update msg model =
             let
                 updateItem item =
                     let
-                        ( newColor, newValid ) =
+                        newItem =
                             case parseHsluv value of
                                 Just color ->
-                                    ( ThemeColorHSLuv color, True )
+                                    { item
+                                        | rgbValid = True
+                                        , color = ThemeColorHSLuv color
+                                        , rgbInput = rgbToString <| hsluvToRgb color
+                                    }
 
                                 Nothing ->
-                                    ( item.color, False )
+                                    { item | hsluvValid = False }
                     in
-                    { item
-                        | color = newColor
-                        , hsluvInput = value
-                        , hsluvValid = newValid
-                    }
+                    { newItem | hsluvInput = value }
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
