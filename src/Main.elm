@@ -422,6 +422,11 @@ gray =
     rgb255 220 220 220
 
 
+linkColor : Color
+linkColor =
+    rgb255 0 0 220
+
+
 spacingSmall : Attribute Msg
 spacingSmall =
     spacing <| rem
@@ -456,7 +461,12 @@ view model =
             , height fill
             , centerX
             ]
-            [ appView model
+            [ column
+                [ width fill
+                , height fill
+                ]
+                [ appView model ]
+            , footerView
             ]
 
 
@@ -665,3 +675,17 @@ outputView colors =
         , label = Input.labelAbove [] (text "Output")
         , spellcheck = False
         }
+
+
+footerView : Element Msg
+footerView =
+    row
+        [ spacingDefault
+        , width fill
+        ]
+        [ newTabLink
+            [ Font.color linkColor, Font.underline ]
+            { url = "https://github.com/megapctr/color-tuner"
+            , label = text "Source"
+            }
+        ]
