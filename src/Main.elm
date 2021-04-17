@@ -264,13 +264,13 @@ parseCssInput value =
 
 cssInputParser : Parser (List ( String, Color ))
 cssInputParser =
-    Parser.loop [] cssStmtParser
+    Parser.loop [] cssColorStmtParser
 
 
-cssStmtParser :
+cssColorStmtParser :
     List ( String, Color )
     -> Parser (Parser.Step (List ( String, Color )) (List ( String, Color )))
-cssStmtParser revStmts =
+cssColorStmtParser revStmts =
     Parser.oneOf
         [ Parser.succeed (\k v -> Parser.Loop <| ( k, v ) :: revStmts)
             -- property name
