@@ -80,9 +80,11 @@ parseRgb s =
                 s
                     |> String.foldl (\c acc -> acc ++ [ c, c ]) []
                     |> String.fromList
+                    |> String.toLower
 
             else
                 s
+                    |> String.toLower
 
         resultR =
             Hex.fromString <| String.slice 0 2 cleanStr
@@ -209,12 +211,16 @@ init : Model
 init =
     let
         initText =
-            """black: #000000;
-red-20: #320000;
-red-40: #640000;
-red-60: #960000;
-red-80: #c80000;
-red-100: #fa0000;"""
+            """--green-50: #ECFDF5;
+--green-100: #D1FAE5;
+--green-200: #A7F3D0;
+--green-300: #6EE7B7;
+--green-400: #34D399;
+--green-500: #10B981;
+--green-600: #059669;
+--green-700: #047857;
+--green-800: #065F46;
+--green-900: #064E3B;"""
 
         model =
             { inputText = ""
