@@ -349,8 +349,7 @@ parseCssInput value =
     in
     value
         |> Parser.run cssInputParser
-        |> Result.toMaybe
-        |> Maybe.withDefault []
+        |> Result.withDefault []
         |> List.filterMap newItem
 
 
@@ -500,7 +499,7 @@ themeColorsHeaderView =
             (3 + 3 + 1 + 3 + 3) * rem
     in
     row [ spacingDefault, width fill, Font.center ]
-        [ el [ width <| px nameColWidth ] (text "Name")
+        [ el [ width <| px nameColWidth ] (text "Color")
         , el [ width fill ] (text "HSLuv")
         , el [ width fill ] (text "Hue")
         , el [ width fill ] (text "Saturation")
