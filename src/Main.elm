@@ -57,9 +57,13 @@ parseRgb : String -> Maybe Color
 parseRgb s =
     let
         cleanStr =
-            s
-                |> String.trim
-                |> String.replace "#" ""
+            if String.length s == 3 then
+                s
+                    |> String.foldl (\c acc -> acc ++ [ c, c ]) []
+                    |> String.fromList
+
+            else
+                s
 
         resultR =
             Hex.fromString <| String.slice 0 2 cleanStr
@@ -295,6 +299,7 @@ cssColorStmtParser revStmts =
             |. Parser.symbol ";"
             -- drop comments
             |. Parser.chompUntilEndOr "\n"
+            |. Parser.spaces
         , Parser.succeed (Parser.Done <| List.reverse revStmts)
         ]
 
