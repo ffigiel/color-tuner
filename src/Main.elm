@@ -462,15 +462,26 @@ appView model =
             [ inputView model.inputText
             , outputView model.themeColors
             ]
-        , column [ spacingSmall, width fill ]
+        , themeColorsView model.themeColors
+        ]
+
+
+themeColorsView : Array ThemeColor -> Element Msg
+themeColorsView themeColors =
+    if Array.isEmpty themeColors then
+        el
+            [ Font.color errColor ]
+            (text "No colors found.")
+
+    else
+        column [ spacingSmall, width fill ]
             [ themeColorsHeaderView
             , column [ width fill ]
-                (model.themeColors
+                (themeColors
                     |> Array.toList
                     |> List.indexedMap themeColorView
                 )
             ]
-        ]
 
 
 themeColorsHeaderView : Element Msg
@@ -633,7 +644,7 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    Input.multiline [ width fill ]
+    Input.multiline [ width fill, height fill ]
         { onChange = always Noop
         , text = outputText
         , placeholder = Nothing
