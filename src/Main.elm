@@ -32,8 +32,8 @@ type alias Model =
 
 type alias ThemeColor =
     { name : String
-    , original : Color
-    , new : HSLuv
+    , originalColor : Color
+    , newColor : Color
     , hsluvInput : String
     , hsluvValid : Bool
     }
@@ -191,14 +191,10 @@ init =
             ]
 
         toThemeColor i rgbColor =
-            let
-                hsluvColor =
-                    rgbToHsluv rgbColor
-            in
             { name = String.repeat (i + 1) "a"
-            , original = rgbColor
-            , new = hsluvColor
-            , hsluvInput = hsluvToString hsluvColor
+            , originalColor = rgbColor
+            , newColor = rgbColor
+            , hsluvInput = hsluvToString <| rgbToHsluv rgbColor
             , hsluvValid = True
             }
 
@@ -226,7 +222,7 @@ update msg model =
                             { item
                                 | hsluvInput = value
                                 , hsluvValid = True
-                                , new = color
+                                , newColor = hsluvToRgb color
                             }
 
                         Nothing ->
@@ -298,20 +294,20 @@ themeColorView itemId item =
             , valid = item.hsluvValid
             }
         , row []
-            [ el
-                [ Background.color item.original
-                , width <| px (rem * 3)
-                , height <| px (rem * 3)
-                ]
-                (text "")
-            , el
-                [ Background.color <| hsluvToRgb item.new
-                , width <| px (rem * 3)
-                , height <| px (rem * 3)
-                ]
-                (text "")
+            [ colorSwatch item.originalColor
+            , colorSwatch item.newColor
             ]
         ]
+
+
+colorSwatch : Color -> Element Msg
+colorSwatch color =
+    el
+        [ Background.color color
+        , width <| px (rem * 3)
+        , height <| px (rem * 3)
+        ]
+        (text "")
 
 
 hsluvInput :
