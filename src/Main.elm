@@ -385,6 +385,8 @@ themeColorView itemId item =
         , row []
             [ colorSwatch item.originalColor
             , colorSwatch item.newColor
+            , textSwatch item.originalColor
+            , textSwatch item.newColor
             ]
         ]
 
@@ -397,6 +399,18 @@ colorSwatch color =
         , height <| px (rem * 3)
         ]
         (text "")
+
+
+textSwatch : Color -> Element Msg
+textSwatch color =
+    el
+        [ Font.color color
+        , width <| px (rem * 3)
+        , height <| px (rem * 3)
+        , centerX
+        , centerY
+        ]
+        (el [ centerX, centerY ] (text "Aa"))
 
 
 hsluvInput :
