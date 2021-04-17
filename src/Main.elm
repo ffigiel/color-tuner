@@ -25,6 +25,7 @@ import Set
 type Msg
     = GotInputText String
     | GotHsluvInput Int String
+    | Noop
 
 
 type alias Model =
@@ -237,6 +238,9 @@ update msg model =
             in
             { model | themeColors = Array.update itemId updateItem model.themeColors }
 
+        Noop ->
+            model
+
 
 parseCssInput : String -> List ThemeColor
 parseCssInput value =
@@ -361,15 +365,15 @@ view model =
 appView : Model -> Element Msg
 appView model =
     column [ spacingDefault, width fill ]
-        [ column [ width fill ]
+        [ row [ spacingDefault, width fill ]
+            [ inputView model.inputText
+            , outputView model.themeColors
+            ]
+        , column [ width fill ]
             (model.themeColors
                 |> Array.toList
                 |> List.indexedMap themeColorView
             )
-        , row [ spacingDefault, width fill ]
-            [ inputView model.inputText
-            , outputView model.themeColors
-            ]
         ]
 
 
@@ -447,7 +451,7 @@ inputView value =
         { onChange = GotInputText
         , text = value
         , placeholder = Nothing
-        , label = Input.labelHidden "css"
+        , label = Input.labelAbove [] (text "Input")
         , spellcheck = False
         }
 
@@ -458,14 +462,19 @@ outputView colors =
         outputText =
             colors
                 |> Array.toList
-                |> List.map cssValue
+                |> List.map toCssValue
                 |> String.join "\n"
 
-        cssValue item =
+        toCssValue item =
             item.name
                 ++ ": "
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    el [ width fill, fontMonospace ]
-        (text outputText)
+    Input.multiline [ width fill, fontMonospace ]
+        { onChange = always Noop
+        , text = outputText
+        , placeholder = Nothing
+        , label = Input.labelAbove [] (text "Output")
+        , spellcheck = False
+        }
