@@ -277,11 +277,14 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
-    column [ width fill ]
-        (model.themeColors
-            |> Array.toList
-            |> List.indexedMap themeColorView
-        )
+    column [ spacingDefault, width fill ]
+        [ column [ width fill ]
+            (model.themeColors
+                |> Array.toList
+                |> List.indexedMap themeColorView
+            )
+        , outputView model.themeColors
+        ]
 
 
 themeColorView : Int -> ThemeColor -> Element Msg
@@ -336,3 +339,22 @@ hsluvInput { label, onChange, value, valid } =
         , text = value
         , placeholder = Nothing
         }
+
+
+outputView : Array ThemeColor -> Element Msg
+outputView colors =
+    let
+        outputText =
+            colors
+                |> Array.toList
+                |> List.map cssValue
+                |> String.join "\n"
+
+        cssValue item =
+            item.name
+                ++ ": "
+                ++ rgbToString item.newColor
+                ++ ";"
+    in
+    el [ Font.family [ Font.monospace ] ]
+        (text outputText)
