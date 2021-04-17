@@ -493,11 +493,15 @@ themeColorsView themeColors =
 themeColorsHeaderView : Element Msg
 themeColorsHeaderView =
     let
+        nameColWidth =
+            7 * rem
+
         previewColWidth =
-            (3 + 3 + 2 + 3 + 3) * rem
+            (3 + 3 + 1 + 3 + 3) * rem
     in
     row [ spacingDefault, width fill, Font.center ]
-        [ el [ width fill ] (text "HSLuv")
+        [ el [ width <| px nameColWidth ] (text "Name")
+        , el [ width fill ] (text "HSLuv")
         , el [ width fill ] (text "Hue")
         , el [ width fill ] (text "Saturation")
         , el [ width fill ] (text "Lightness")
@@ -520,20 +524,25 @@ themeColorView itemId item =
                     )
 
         children =
-            hsluvInput
+            [ el [ width <| px (7 * rem) ]
+                (text item.name)
+            , hsluvInput
                 { label = item.name
                 , onChange = GotHsluvTextInput itemId
                 , value = item.hsluvInput
                 , valid = item.hsluvValid
                 }
-                :: rangeInputs
-                ++ [ row []
-                        [ colorSwatch item.originalColor
-                        , colorSwatch item.newColor
-                        ]
-                   , row []
-                        [ textSwatch item.originalColor
-                        , textSwatch item.newColor
+            ]
+                ++ rangeInputs
+                ++ [ row [ spacingSmall ]
+                        [ row []
+                            [ colorSwatch item.originalColor
+                            , colorSwatch item.newColor
+                            ]
+                        , row []
+                            [ textSwatch item.originalColor
+                            , textSwatch item.newColor
+                            ]
                         ]
                    ]
     in
