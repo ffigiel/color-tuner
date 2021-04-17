@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "elm": "*"
+    "@parcel/transformer-elm": "^2.0.0-beta.2",
+    "elm": "*",
+    "elm-analyse": "^0.16.5",
+    "parcel": "*"
   }
 }
