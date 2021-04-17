@@ -273,15 +273,19 @@ cssStmtParser :
 cssStmtParser revStmts =
     Parser.oneOf
         [ Parser.succeed (\k v -> Parser.Loop <| ( k, v ) :: revStmts)
+            -- property name
             |. Parser.spaces
             |= cssNameParser
             |. Parser.spaces
             |. Parser.symbol ":"
+            -- value
             |. Parser.spaces
             |= cssColorParser
             |. Parser.spaces
             |. Parser.symbol ";"
             |. Parser.spaces
+            -- drop comments
+            |. Parser.chompUntilEndOr "\n"
         , Parser.succeed (Parser.Done <| List.reverse revStmts)
         ]
 
