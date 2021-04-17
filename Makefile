@@ -6,7 +6,10 @@ clean:
 	rm -rf .cache dist
 
 dist: clean
-	npx parcel build --no-source-maps src/index.html
+	npx parcel build \
+		--no-source-maps \
+		--public-url /color-tuner/ \
+		src/index.html
 
 dev:
 	npx parcel src/index.html
