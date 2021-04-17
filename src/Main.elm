@@ -22,11 +22,13 @@ import Round
 
 
 type Msg
-    = GotHsluvInput Int String
+    = GotInputText String
+    | GotHsluvInput Int String
 
 
 type alias Model =
-    { themeColors : Array ThemeColor
+    { inputText : String
+    , themeColors : Array ThemeColor
     }
 
 
@@ -203,7 +205,8 @@ init =
                 |> List.indexedMap toThemeColor
                 |> Array.fromList
     in
-    { themeColors = themeColors
+    { inputText = ""
+    , themeColors = themeColors
     }
 
 
@@ -214,6 +217,9 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        GotInputText value ->
+            { model | inputText = value }
+
         GotHsluvInput itemId value ->
             let
                 updateItem item =
@@ -288,7 +294,10 @@ appView model =
                 |> Array.toList
                 |> List.indexedMap themeColorView
             )
-        , outputView model.themeColors
+        , row [ spacingDefault, width fill ]
+            [ inputView model.inputText
+            , outputView model.themeColors
+            ]
         ]
 
 
@@ -346,6 +355,17 @@ hsluvInput { label, onChange, value, valid } =
         }
 
 
+inputView : String -> Element Msg
+inputView value =
+    Input.multiline [ width fill, fontMonospace ]
+        { onChange = GotInputText
+        , text = value
+        , placeholder = Nothing
+        , label = Input.labelHidden "css"
+        , spellcheck = False
+        }
+
+
 outputView : Array ThemeColor -> Element Msg
 outputView colors =
     let
@@ -361,5 +381,5 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    el [ fontMonospace ]
+    el [ width fill, fontMonospace ]
         (text outputText)
