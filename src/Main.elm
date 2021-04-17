@@ -24,8 +24,9 @@ import Set
 
 type Msg
     = GotInputText String
-    | GotHsluvInput Int String
     | Noop
+    | GotHsluvTextInput Int String
+    | GotHsluvRangeInput Int HsluvComponent Float
 
 
 type alias Model =
@@ -40,7 +41,24 @@ type alias ThemeColor =
     , newColor : Color
     , hsluvInput : String
     , hsluvValid : Bool
+    , hsluvComponents : HsluvComponents
     }
+
+
+type alias HsluvComponents =
+    { hue : Float
+    , saturation : Float
+    , lightness : Float
+
+    -- We don't use alpha, but we keep it for compatibility with HSLuv module
+    , alpha : Float
+    }
+
+
+type HsluvComponent
+    = Hue
+    | Saturation
+    | Lightness
 
 
 rgbToHsluv : Color -> HSLuv
@@ -97,7 +115,8 @@ rgbToString color =
 
         componentToString : Float -> String
         componentToString =
-            (*) 255
+            max 0
+                >> (*) 255
                 >> floor
                 >> Hex.toString
                 >> String.padLeft 2 '0'
@@ -219,15 +238,16 @@ update msg model =
                 , themeColors = Array.fromList <| parseCssInput value
             }
 
-        GotHsluvInput itemId value ->
+        GotHsluvTextInput itemId value ->
             let
                 updateItem item =
                     case parseHsluv value of
-                        Just color ->
+                        Just hsluv ->
                             { item
                                 | hsluvInput = value
                                 , hsluvValid = True
-                                , newColor = hsluvToRgb color
+                                , hsluvComponents = HSLuv.toHsluv hsluv
+                                , newColor = hsluvToRgb hsluv
                             }
 
                         Nothing ->
@@ -238,8 +258,65 @@ update msg model =
             in
             { model | themeColors = Array.update itemId updateItem model.themeColors }
 
+        GotHsluvRangeInput itemId component value ->
+            let
+                updateItem item =
+                    let
+                        newComponents =
+                            setHsluvComponent component value item.hsluvComponents
+
+                        newHsluv =
+                            HSLuv.hsluv newComponents
+                    in
+                    { item
+                        | newColor = hsluvToRgb newHsluv
+                        , hsluvComponents = newComponents
+                        , hsluvInput = hsluvToString <| newHsluv
+                    }
+            in
+            { model | themeColors = Array.update itemId updateItem model.themeColors }
+
         Noop ->
             model
+
+
+hsluvComponentToString : HsluvComponent -> String
+hsluvComponentToString c =
+    case c of
+        Hue ->
+            "hue"
+
+        Saturation ->
+            "saturation"
+
+        Lightness ->
+            "lightness"
+
+
+getHsluvComponent : HsluvComponent -> HsluvComponents -> Float
+getHsluvComponent c cs =
+    case c of
+        Hue ->
+            cs.hue
+
+        Saturation ->
+            cs.saturation
+
+        Lightness ->
+            cs.lightness
+
+
+setHsluvComponent : HsluvComponent -> Float -> HsluvComponents -> HsluvComponents
+setHsluvComponent c v cs =
+    case c of
+        Hue ->
+            { cs | hue = v }
+
+        Saturation ->
+            { cs | saturation = v }
+
+        Lightness ->
+            { cs | lightness = v }
 
 
 parseCssInput : String -> List ThemeColor
@@ -248,12 +325,17 @@ parseCssInput value =
         newItem ( name, mColor ) =
             case mColor of
                 Just color ->
+                    let
+                        hsluv =
+                            rgbToHsluv color
+                    in
                     Just
                         { name = name
                         , originalColor = color
                         , newColor = color
-                        , hsluvInput = hsluvToString <| rgbToHsluv color
+                        , hsluvInput = hsluvToString hsluv
                         , hsluvValid = True
+                        , hsluvComponents = HSLuv.toHsluv hsluv
                         }
 
                 Nothing ->
@@ -330,6 +412,11 @@ errColor =
     rgb255 220 0 0
 
 
+gray : Color
+gray =
+    rgb255 220 220 220
+
+
 spacingDefault : Attribute Msg
 spacingDefault =
     spacing <| rem * 2
@@ -379,20 +466,38 @@ appView model =
 
 themeColorView : Int -> ThemeColor -> Element Msg
 themeColorView itemId item =
-    row [ spacingDefault, width fill ]
-        [ hsluvInput
-            { label = item.name
-            , onChange = GotHsluvInput itemId
-            , value = item.hsluvInput
-            , valid = item.hsluvValid
-            }
-        , row []
-            [ colorSwatch item.originalColor
-            , colorSwatch item.newColor
-            , textSwatch item.originalColor
-            , textSwatch item.newColor
+    let
+        rangeInputs =
+            [ Hue, Saturation, Lightness ]
+                |> List.map
+                    (\c ->
+                        hsluvRangeInput
+                            { component = c
+                            , onChange = GotHsluvRangeInput itemId c
+                            , value = getHsluvComponent c item.hsluvComponents
+                            }
+                    )
+
+        children =
+            [ hsluvInput
+                { label = item.name
+                , onChange = GotHsluvTextInput itemId
+                , value = item.hsluvInput
+                , valid = item.hsluvValid
+                }
             ]
-        ]
+                ++ rangeInputs
+                ++ [ row []
+                        [ colorSwatch item.originalColor
+                        , colorSwatch item.newColor
+                        ]
+                   , row []
+                        [ textSwatch item.originalColor
+                        , textSwatch item.newColor
+                        ]
+                   ]
+    in
+    row [ spacingDefault, width fill ] children
 
 
 colorSwatch : Color -> Element Msg
@@ -442,6 +547,43 @@ hsluvInput { label, onChange, value, valid } =
         , onChange = onChange
         , text = value
         , placeholder = Nothing
+        }
+
+
+hsluvRangeInput :
+    { component : HsluvComponent, onChange : Float -> Msg, value : Float }
+    -> Element Msg
+hsluvRangeInput { component, onChange, value } =
+    let
+        sliderStep =
+            case component of
+                Hue ->
+                    Just (1 / 100 / 360)
+
+                _ ->
+                    Just (1 / 100 / 100)
+    in
+    Input.slider
+        [ height <| px rem
+        , Element.behindContent
+            (Element.el
+                [ Element.width Element.fill
+                , Element.height (Element.px 2)
+                , Element.centerY
+                , Background.color gray
+                , Border.rounded 2
+                ]
+                Element.none
+            )
+        ]
+        { onChange = onChange
+        , label = Input.labelHidden <| hsluvComponentToString component
+        , min = 0
+        , max = 1
+        , step = sliderStep
+        , value = value
+        , thumb =
+            Input.defaultThumb
         }
 
 
