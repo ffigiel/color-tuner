@@ -253,6 +253,11 @@ spacingDefault =
     spacing <| rem * 2
 
 
+fontMonospace : Attribute Msg
+fontMonospace =
+    Font.family [ Font.monospace ]
+
+
 paddingDefault : Attribute Msg
 paddingDefault =
     padding <| rem * 2
@@ -323,7 +328,7 @@ hsluvInput :
 hsluvInput { label, onChange, value, valid } =
     let
         baseAttrs =
-            [ Font.family [ Font.monospace ] ]
+            [ fontMonospace ]
 
         attrs =
             if valid then
@@ -356,5 +361,5 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    el [ Font.family [ Font.monospace ] ]
+    el [ fontMonospace ]
         (text outputText)
