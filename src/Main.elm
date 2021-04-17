@@ -24,8 +24,6 @@ import Round
 type Msg
     = GotRgbInput Int Int String
     | GotHsluvInput Int Int String
-    | RemoveColorSetItem Int Int
-    | AddColorSetItem Int
 
 
 type ThemeColor
@@ -314,16 +312,6 @@ update msg model =
             in
             { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
 
-        RemoveColorSetItem setId itemId ->
-            { model | colorSets = removeColorSetItem setId itemId model.colorSets }
-
-        AddColorSetItem setId ->
-            let
-                newItem =
-                    newColorSetItem <| ThemeColorRgb <| rgb 0 0 0
-            in
-            { model | colorSets = addColorSetItem setId newItem model.colorSets }
-
 
 updateColorSetItem :
     Int
@@ -335,24 +323,6 @@ updateColorSetItem setId itemId updateItem colorSets =
     let
         updateColorSet set =
             { set | items = Array.update itemId updateItem set.items }
-    in
-    Array.update setId updateColorSet colorSets
-
-
-removeColorSetItem : Int -> Int -> Array ColorSet -> Array ColorSet
-removeColorSetItem setId itemId colorSets =
-    let
-        updateColorSet set =
-            { set | items = Array.removeAt itemId set.items }
-    in
-    Array.update setId updateColorSet colorSets
-
-
-addColorSetItem : Int -> ColorSetItem -> Array ColorSet -> Array ColorSet
-addColorSetItem setId newItem colorSets =
-    let
-        updateColorSet set =
-            { set | items = Array.push newItem set.items }
     in
     Array.update setId updateColorSet colorSets
 
@@ -414,15 +384,6 @@ colorSetView setId colorSet =
             colorSet.items
                 |> Array.toList
                 |> List.indexedMap (colorSetItemView setId)
-
-        addNewButton =
-            Input.button
-                [ width <| px (rem * 3)
-                , height <| px (rem * 3)
-                ]
-                { onPress = Just <| AddColorSetItem setId
-                , label = el [ centerX, centerY ] <| text "Add"
-                }
     in
     column
         [ spacingDefault
@@ -431,7 +392,7 @@ colorSetView setId colorSet =
         ]
         [ text colorSet.name
         , column [ width fill ]
-            (renderedItems ++ [ addNewButton ])
+            renderedItems
         ]
 
 
@@ -459,11 +420,6 @@ colorSetItemView setId itemId item =
             , onChange = GotHsluvInput setId itemId
             , text = item.hsluvInput
             , valid = item.hsluvValid
-            }
-        , Input.button
-            []
-            { onPress = Just <| RemoveColorSetItem setId itemId
-            , label = text "Remove"
             }
         ]
 
