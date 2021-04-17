@@ -247,29 +247,39 @@ update msg model =
 parseCssInput : String -> List ThemeColor
 parseCssInput value =
     let
-        newItem ( name, color ) =
-            { name = name
-            , originalColor = color
-            , newColor = color
-            , hsluvInput = hsluvToString <| rgbToHsluv color
-            , hsluvValid = True
-            }
+        newItem ( name, mColor ) =
+            case mColor of
+                Just color ->
+                    Just
+                        { name = name
+                        , originalColor = color
+                        , newColor = color
+                        , hsluvInput = hsluvToString <| rgbToHsluv color
+                        , hsluvValid = True
+                        }
+
+                Nothing ->
+                    Nothing
     in
     value
         |> Parser.run cssInputParser
         |> Result.toMaybe
         |> Maybe.withDefault []
-        |> List.map newItem
+        |> List.filterMap newItem
 
 
-cssInputParser : Parser (List ( String, Color ))
+type alias CssColorStmt =
+    ( String, Maybe Color )
+
+
+cssInputParser : Parser (List CssColorStmt)
 cssInputParser =
     Parser.loop [] cssColorStmtParser
 
 
 cssColorStmtParser :
-    List ( String, Color )
-    -> Parser (Parser.Step (List ( String, Color )) (List ( String, Color )))
+    List CssColorStmt
+    -> Parser (Parser.Step (List CssColorStmt) (List CssColorStmt))
 cssColorStmtParser revStmts =
     Parser.oneOf
         [ Parser.succeed (\k v -> Parser.Loop <| ( k, v ) :: revStmts)
@@ -298,14 +308,13 @@ cssNameParser =
         }
 
 
-cssColorParser : Parser Color
+cssColorParser : Parser (Maybe Color)
 cssColorParser =
-    Parser.succeed (parseRgb >> Maybe.withDefault (rgb 0 0 0))
-        |= Parser.variable
-            { start = always True
-            , inner = \c -> Char.isAlphaNum c || c == '-'
-            , reserved = Set.empty
-            }
+    Parser.oneOf
+        [ Parser.succeed parseRgb
+            |. Parser.chompIf ((==) '#')
+            |= Parser.getChompedString (Parser.chompWhile Char.isHexDigit)
+        ]
 
 
 
