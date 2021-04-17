@@ -479,14 +479,13 @@ themeColorView itemId item =
                     )
 
         children =
-            [ hsluvInput
+            hsluvInput
                 { label = item.name
                 , onChange = GotHsluvTextInput itemId
                 , value = item.hsluvInput
                 , valid = item.hsluvValid
                 }
-            ]
-                ++ rangeInputs
+                :: rangeInputs
                 ++ [ row []
                         [ colorSwatch item.originalColor
                         , colorSwatch item.newColor
