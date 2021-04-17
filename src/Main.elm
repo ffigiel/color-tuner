@@ -22,66 +22,21 @@ import Round
 
 
 type Msg
-    = GotRgbInput Int Int String
-    | GotHsluvInput Int Int String
-
-
-type ThemeColor
-    = ThemeColorRgb Color
-    | ThemeColorHSLuv HSLuv
+    = GotHsluvInput Int String
 
 
 type alias Model =
-    { colorSets : Array ColorSet }
-
-
-type alias ColorSet =
-    { name : String
-    , items : Array ColorSetItem
+    { themeColors : Array ThemeColor
     }
 
 
-type alias ColorSetItem =
-    { color : ThemeColor
-    , rgbInput : String
-    , rgbValid : Bool
+type alias ThemeColor =
+    { name : String
+    , original : Color
+    , new : HSLuv
     , hsluvInput : String
     , hsluvValid : Bool
     }
-
-
-type alias NormalizedColor =
-    { rgb : Color
-    , hsluv : HSLuv
-    }
-
-
-newColorSetItem : ThemeColor -> ColorSetItem
-newColorSetItem c =
-    let
-        color =
-            normalizeColor c
-    in
-    { color = c
-    , rgbInput = rgbToString color.rgb
-    , rgbValid = True
-    , hsluvInput = hsluvToString color.hsluv
-    , hsluvValid = True
-    }
-
-
-normalizeColor : ThemeColor -> NormalizedColor
-normalizeColor tc =
-    case tc of
-        ThemeColorRgb rgb ->
-            { rgb = rgb
-            , hsluv = rgbToHsluv rgb
-            }
-
-        ThemeColorHSLuv hsluv ->
-            { rgb = hsluvToRgb hsluv
-            , hsluv = hsluv
-            }
 
 
 rgbToHsluv : Color -> HSLuv
@@ -227,41 +182,32 @@ init : Model
 init =
     let
         rgbColors =
-            [ ThemeColorRgb <| rgb255 0 0 0
-            , ThemeColorRgb <| rgb255 50 0 0
-            , ThemeColorRgb <| rgb255 100 0 0
-            , ThemeColorRgb <| rgb255 150 0 0
-            , ThemeColorRgb <| rgb255 200 0 0
-            , ThemeColorRgb <| rgb255 250 0 0
+            [ rgb255 0 0 0
+            , rgb255 50 0 0
+            , rgb255 100 0 0
+            , rgb255 150 0 0
+            , rgb255 200 0 0
+            , rgb255 250 0 0
             ]
 
-        hsluvColors =
-            List.range 0 5
-                |> List.map
-                    (\n ->
-                        { hue = 12.18
-                        , saturation = 100
-                        , lightness = 10.442 * toFloat n
-                        , alpha = 1
-                        }
-                            |> HSLuv.hsluv360
-                            |> ThemeColorHSLuv
-                    )
+        toThemeColor i rgbColor =
+            let
+                hsluvColor =
+                    rgbToHsluv rgbColor
+            in
+            { name = String.repeat (i + 1) "a"
+            , original = rgbColor
+            , new = hsluvColor
+            , hsluvInput = hsluvToString hsluvColor
+            , hsluvValid = True
+            }
 
-        colorsToItems colors =
-            colors
-                |> List.map newColorSetItem
+        themeColors =
+            rgbColors
+                |> List.indexedMap toThemeColor
                 |> Array.fromList
     in
-    { colorSets =
-        Array.fromList
-            [ { name = "rgb"
-              , items = colorsToItems rgbColors
-              }
-            , { name = "hsluv"
-              , items = colorsToItems hsluvColors
-              }
-            ]
+    { themeColors = themeColors
     }
 
 
@@ -272,59 +218,24 @@ init =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        GotRgbInput setId itemId value ->
+        GotHsluvInput itemId value ->
             let
                 updateItem item =
-                    let
-                        newItem =
-                            case parseRgb value of
-                                Just color ->
-                                    { item
-                                        | rgbValid = True
-                                        , color = ThemeColorRgb color
-                                        , hsluvInput = hsluvToString <| rgbToHsluv color
-                                    }
+                    case parseHsluv value of
+                        Just color ->
+                            { item
+                                | hsluvInput = value
+                                , hsluvValid = True
+                                , new = color
+                            }
 
-                                Nothing ->
-                                    { item | rgbValid = False }
-                    in
-                    { newItem | rgbInput = value }
+                        Nothing ->
+                            { item
+                                | hsluvInput = value
+                                , hsluvValid = False
+                            }
             in
-            { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
-
-        GotHsluvInput setId itemId value ->
-            let
-                updateItem item =
-                    let
-                        newItem =
-                            case parseHsluv value of
-                                Just color ->
-                                    { item
-                                        | rgbValid = True
-                                        , color = ThemeColorHSLuv color
-                                        , rgbInput = rgbToString <| hsluvToRgb color
-                                    }
-
-                                Nothing ->
-                                    { item | hsluvValid = False }
-                    in
-                    { newItem | hsluvInput = value }
-            in
-            { model | colorSets = updateColorSetItem setId itemId updateItem model.colorSets }
-
-
-updateColorSetItem :
-    Int
-    -> Int
-    -> (ColorSetItem -> ColorSetItem)
-    -> Array ColorSet
-    -> Array ColorSet
-updateColorSetItem setId itemId updateItem colorSets =
-    let
-        updateColorSet set =
-            { set | items = Array.update itemId updateItem set.items }
-    in
-    Array.update setId updateColorSet colorSets
+            { model | themeColors = Array.update itemId updateItem model.themeColors }
 
 
 
@@ -370,71 +281,50 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
-    row [ spacingDefault, width fill ]
-        (model.colorSets
+    column [ width fill ]
+        (model.themeColors
             |> Array.toList
-            |> List.indexedMap colorSetView
+            |> List.indexedMap themeColorView
         )
 
 
-colorSetView : Int -> ColorSet -> Element Msg
-colorSetView setId colorSet =
-    let
-        renderedItems =
-            colorSet.items
-                |> Array.toList
-                |> List.indexedMap (colorSetItemView setId)
-    in
-    column
-        [ spacingDefault
-        , width fill
-        , alignTop
-        ]
-        [ text colorSet.name
-        , column [ width fill ]
-            renderedItems
-        ]
-
-
-colorSetItemView : Int -> Int -> ColorSetItem -> Element Msg
-colorSetItemView setId itemId item =
-    let
-        color =
-            normalizeColor item.color
-    in
+themeColorView : Int -> ThemeColor -> Element Msg
+themeColorView itemId item =
     row [ spacingDefault, width fill ]
-        [ el
-            [ Background.color color.rgb
-            , width <| px (rem * 3)
-            , height <| px (rem * 3)
-            ]
-            (text "")
-        , colorSetItemInput
-            { label = "RGB"
-            , onChange = GotRgbInput setId itemId
-            , text = item.rgbInput
-            , valid = item.rgbValid
-            }
-        , colorSetItemInput
-            { label = "HSLuv"
-            , onChange = GotHsluvInput setId itemId
-            , text = item.hsluvInput
+        [ hsluvInput
+            { label = item.name
+            , onChange = GotHsluvInput itemId
+            , value = item.hsluvInput
             , valid = item.hsluvValid
             }
+        , row []
+            [ el
+                [ Background.color item.original
+                , width <| px (rem * 3)
+                , height <| px (rem * 3)
+                ]
+                (text "")
+            , el
+                [ Background.color <| hsluvToRgb item.new
+                , width <| px (rem * 3)
+                , height <| px (rem * 3)
+                ]
+                (text "")
+            ]
         ]
 
 
-colorSetItemInput :
+hsluvInput :
     { label : String
     , onChange : String -> Msg
-    , text : String
+    , value : String
     , valid : Bool
     }
     -> Element Msg
-colorSetItemInput { label, onChange, text, valid } =
+hsluvInput { label, onChange, value, valid } =
     let
         baseAttrs =
-            [ Font.family [ Font.monospace ], width fill ]
+            [ Font.family [ Font.monospace ] ]
 
         attrs =
             if valid then
@@ -447,6 +337,6 @@ colorSetItemInput { label, onChange, text, valid } =
         attrs
         { label = Input.labelHidden label
         , onChange = onChange
-        , text = text
+        , text = value
         , placeholder = Nothing
         }
