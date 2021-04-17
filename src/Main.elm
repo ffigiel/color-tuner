@@ -283,7 +283,6 @@ cssStmtParser revStmts =
             |= cssColorParser
             |. Parser.spaces
             |. Parser.symbol ";"
-            |. Parser.spaces
             -- drop comments
             |. Parser.chompUntilEndOr "\n"
         , Parser.succeed (Parser.Done <| List.reverse revStmts)
