@@ -417,6 +417,11 @@ gray =
     rgb255 220 220 220
 
 
+spacingSmall : Attribute Msg
+spacingSmall =
+    spacing <| rem
+
+
 spacingDefault : Attribute Msg
 spacingDefault =
     spacing <| rem * 2
@@ -436,6 +441,7 @@ view : Model -> Html Msg
 view model =
     layout
         [ Font.size rem
+        , fontMonospace
         ]
     <|
         column
@@ -456,11 +462,29 @@ appView model =
             [ inputView model.inputText
             , outputView model.themeColors
             ]
-        , column [ width fill ]
-            (model.themeColors
-                |> Array.toList
-                |> List.indexedMap themeColorView
-            )
+        , column [ spacingSmall, width fill ]
+            [ themeColorsHeaderView
+            , column [ width fill ]
+                (model.themeColors
+                    |> Array.toList
+                    |> List.indexedMap themeColorView
+                )
+            ]
+        ]
+
+
+themeColorsHeaderView : Element Msg
+themeColorsHeaderView =
+    let
+        previewColWidth =
+            (3 + 3 + 2 + 3 + 3) * rem
+    in
+    row [ spacingDefault, width fill, Font.center ]
+        [ el [ width fill ] (text "HSLuv")
+        , el [ width fill ] (text "Hue")
+        , el [ width fill ] (text "Saturation")
+        , el [ width fill ] (text "Lightness")
+        , el [ width <| px previewColWidth ] (text "Preview")
         ]
 
 
@@ -530,15 +554,12 @@ hsluvInput :
     -> Element Msg
 hsluvInput { label, onChange, value, valid } =
     let
-        baseAttrs =
-            [ fontMonospace ]
-
         attrs =
             if valid then
-                baseAttrs
+                []
 
             else
-                Border.color errColor :: baseAttrs
+                [ Border.color errColor ]
     in
     Input.text
         attrs
@@ -588,7 +609,7 @@ hsluvRangeInput { component, onChange, value } =
 
 inputView : String -> Element Msg
 inputView value =
-    Input.multiline [ width fill, fontMonospace ]
+    Input.multiline [ width fill ]
         { onChange = GotInputText
         , text = value
         , placeholder = Nothing
@@ -612,7 +633,7 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    Input.multiline [ width fill, fontMonospace ]
+    Input.multiline [ width fill ]
         { onChange = always Noop
         , text = outputText
         , placeholder = Nothing
