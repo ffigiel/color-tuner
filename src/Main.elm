@@ -15,6 +15,7 @@ import Hex
 import Html exposing (Html)
 import Parser exposing ((|.), (|=), Parser)
 import Round
+import Set
 
 
 
@@ -218,7 +219,10 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         GotInputText value ->
-            { model | inputText = value }
+            { model
+                | inputText = value
+                , themeColors = Array.fromList <| parseCssInput value
+            }
 
         GotHsluvInput itemId value ->
             let
@@ -238,6 +242,67 @@ update msg model =
                             }
             in
             { model | themeColors = Array.update itemId updateItem model.themeColors }
+
+
+parseCssInput : String -> List ThemeColor
+parseCssInput value =
+    let
+        newItem ( name, color ) =
+            { name = name
+            , originalColor = color
+            , newColor = color
+            , hsluvInput = hsluvToString <| rgbToHsluv color
+            , hsluvValid = True
+            }
+    in
+    value
+        |> Parser.run cssInputParser
+        |> Result.toMaybe
+        |> Maybe.withDefault []
+        |> List.map newItem
+
+
+cssInputParser : Parser (List ( String, Color ))
+cssInputParser =
+    Parser.loop [] cssStmtParser
+
+
+cssStmtParser :
+    List ( String, Color )
+    -> Parser (Parser.Step (List ( String, Color )) (List ( String, Color )))
+cssStmtParser revStmts =
+    Parser.oneOf
+        [ Parser.succeed (\k v -> Parser.Loop <| ( k, v ) :: revStmts)
+            |. Parser.spaces
+            |= cssNameParser
+            |. Parser.spaces
+            |. Parser.symbol ":"
+            |. Parser.spaces
+            |= cssColorParser
+            |. Parser.spaces
+            |. Parser.symbol ";"
+            |. Parser.spaces
+        , Parser.succeed (Parser.Done <| List.reverse revStmts)
+        ]
+
+
+cssNameParser : Parser String
+cssNameParser =
+    Parser.variable
+        { start = always True
+        , inner = \c -> Char.isAlphaNum c || c == '-'
+        , reserved = Set.empty
+        }
+
+
+cssColorParser : Parser Color
+cssColorParser =
+    Parser.succeed (parseRgb >> Maybe.withDefault (rgb 0 0 0))
+        |= Parser.variable
+            { start = always True
+            , inner = \c -> Char.isAlphaNum c || c == '-'
+            , reserved = Set.empty
+            }
 
 
 
