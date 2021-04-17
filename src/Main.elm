@@ -188,31 +188,21 @@ main =
 init : Model
 init =
     let
-        rgbColors =
-            [ rgb255 0 0 0
-            , rgb255 50 0 0
-            , rgb255 100 0 0
-            , rgb255 150 0 0
-            , rgb255 200 0 0
-            , rgb255 250 0 0
-            ]
+        initText =
+            """black: #000000;
+red-20: #320000;
+red-40: #640000;
+red-60: #960000;
+red-80: #c80000;
+red-100: #fa0000;"""
 
-        toThemeColor i rgbColor =
-            { name = String.repeat (i + 1) "a"
-            , originalColor = rgbColor
-            , newColor = rgbColor
-            , hsluvInput = hsluvToString <| rgbToHsluv rgbColor
-            , hsluvValid = True
+        model =
+            { inputText = ""
+            , themeColors = Array.fromList []
             }
-
-        themeColors =
-            rgbColors
-                |> List.indexedMap toThemeColor
-                |> Array.fromList
     in
-    { inputText = ""
-    , themeColors = themeColors
-    }
+    model
+        |> update (GotInputText initText)
 
 
 
