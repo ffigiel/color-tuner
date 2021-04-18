@@ -95,43 +95,6 @@ hsluvToRgb hsluv =
         |> fromRgb
 
 
-parseRgb : String -> Maybe Color
-parseRgb s =
-    let
-        cleanStr =
-            if String.length s == 3 then
-                s
-                    |> String.foldl (\c acc -> acc ++ [ c, c ]) []
-                    |> String.fromList
-                    |> String.toLower
-
-            else
-                s
-                    |> String.toLower
-
-        resultR =
-            Hex.fromString <| String.slice 0 2 cleanStr
-
-        resultG =
-            Hex.fromString <| String.slice 2 4 cleanStr
-
-        resultB =
-            Hex.fromString <| String.slice 4 6 cleanStr
-    in
-    if String.length cleanStr == 6 then
-        Result.map3
-            (\r g b ->
-                rgb255 r g b
-            )
-            resultR
-            resultG
-            resultB
-            |> Result.toMaybe
-
-    else
-        Nothing
-
-
 rgbToString : Color -> String
 rgbToString color =
     let
@@ -351,24 +314,19 @@ setHsluvComponent c v cs =
 parseCssInput : String -> List ThemeColor
 parseCssInput value =
     let
-        newItem ( name, mColor ) =
-            case mColor of
-                Just color ->
-                    let
-                        hsluv =
-                            rgbToHsluv color
-                    in
-                    Just
-                        { name = name
-                        , originalColor = color
-                        , newColor = color
-                        , hsluvInput = hsluvToString hsluv
-                        , hsluvValid = True
-                        , hsluvComponents = toHsluvComponents hsluv
-                        }
-
-                Nothing ->
-                    Nothing
+        newItem ( name, color ) =
+            let
+                hsluv =
+                    rgbToHsluv color
+            in
+            Just
+                { name = name
+                , originalColor = color
+                , newColor = color
+                , hsluvInput = hsluvToString hsluv
+                , hsluvValid = True
+                , hsluvComponents = toHsluvComponents hsluv
+                }
     in
     value
         |> Parser.run cssInputParser
@@ -377,7 +335,7 @@ parseCssInput value =
 
 
 type alias CssColorStmt =
-    ( String, Maybe Color )
+    ( String, Color )
 
 
 cssInputParser : Parser (List CssColorStmt)
@@ -417,13 +375,60 @@ cssNameParser =
         }
 
 
-cssColorParser : Parser (Maybe Color)
+cssColorParser : Parser Color
 cssColorParser =
     Parser.oneOf
-        [ Parser.succeed parseRgb
-            |. Parser.chompIf ((==) '#')
-            |= Parser.getChompedString (Parser.chompWhile Char.isHexDigit)
+        [ Parser.backtrackable hex6ColorParser
+        , hex3ColorParser
         ]
+
+
+hex6ColorParser : Parser Color
+hex6ColorParser =
+    Parser.succeed rgb255
+        |. Parser.symbol "#"
+        |= hex255Parser
+        |= hex255Parser
+        |= hex255Parser
+
+
+hex3ColorParser : Parser Color
+hex3ColorParser =
+    Parser.succeed rgb255
+        |. Parser.symbol "#"
+        |= hex255ShorthandParser
+        |= hex255ShorthandParser
+        |= hex255ShorthandParser
+
+
+hex255Parser : Parser Int
+hex255Parser =
+    Parser.mapChompedString
+        (\s () ->
+            s
+                |> String.toLower
+                |> Hex.fromString
+                |> Result.withDefault 0
+        )
+        (Parser.succeed ()
+            |. Parser.chompIf Char.isHexDigit
+            |. Parser.chompIf Char.isHexDigit
+        )
+
+
+hex255ShorthandParser : Parser Int
+hex255ShorthandParser =
+    Parser.mapChompedString
+        (\s () ->
+            s
+                ++ s
+                |> String.toLower
+                |> Hex.fromString
+                |> Result.withDefault 0
+        )
+        (Parser.succeed ()
+            |. Parser.chompIf Char.isHexDigit
+        )
 
 
 
