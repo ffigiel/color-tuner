@@ -3,6 +3,7 @@ module Main exposing (main)
 import Array exposing (Array)
 import Array.Extra as Array
 import Browser
+import Color
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -198,7 +199,7 @@ init =
     let
         initText =
             """--green-50: rgb(236, 253, 245);
---green-100: #D1FAE5;
+--green-100: hsl(149.3, 80.4%, 90%);
 --green-200: #A7F3D0;
 --green-300: #6EE7B7;
 --green-400: #3D9;
@@ -379,6 +380,7 @@ cssColorParser : Parser Color
 cssColorParser =
     Parser.oneOf
         [ rgbColorParser
+        , hslColorParser
         , hexColorParser
         ]
 
@@ -397,6 +399,32 @@ rgbColorParser =
         |. Parser.symbol ","
         |. Parser.spaces
         |= Parser.int
+        |. Parser.spaces
+        |. Parser.symbol ")"
+
+
+hslColorParser : Parser Color
+hslColorParser =
+    let
+        hslToColor h s l =
+            Color.hsl (h / 360) (s / 100) (l / 100)
+                |> Color.toRgba
+                |> fromRgb
+    in
+    Parser.succeed hslToColor
+        |. Parser.symbol "hsl("
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.symbol "%"
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.symbol "%"
         |. Parser.spaces
         |. Parser.symbol ")"
 
