@@ -1,9 +1,8 @@
 module Main exposing (main)
 
-import Array exposing (Array)
-import Array.Extra as Array
 import Browser
 import Color
+import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -26,14 +25,21 @@ import Set
 type Msg
     = GotInputText String
     | Noop
-    | GotHsluvTextInput Int String
-    | GotHsluvRangeInput Int HsluvComponent Float
+    | GotHsluvTextInput String String
+    | GotHsluvRangeInput String HsluvComponent Float
 
 
 type alias Model =
     { inputText : String
-    , themeColors : Array ThemeColor
+    , themeColorNames : List String
+    , themeColorsByName : Dict String ThemeColor
     }
+
+
+getThemeColors : Model -> List ThemeColor
+getThemeColors model =
+    model.themeColorNames
+        |> List.filterMap (\n -> Dict.get n model.themeColorsByName)
 
 
 type alias ThemeColor =
@@ -207,7 +213,8 @@ init =
 
         model =
             { inputText = ""
-            , themeColors = Array.fromList []
+            , themeColorNames = []
+            , themeColorsByName = Dict.empty
             }
     in
     model
@@ -222,12 +229,22 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         GotInputText value ->
+            let
+                themeColors =
+                    parseCssInput value
+
+                themeColorNames =
+                    List.map .name themeColors
+            in
             { model
                 | inputText = value
-                , themeColors = Array.fromList <| parseCssInput value
+                , themeColorNames = themeColorNames
+                , themeColorsByName =
+                    List.map2 Tuple.pair themeColorNames themeColors
+                        |> Dict.fromList
             }
 
-        GotHsluvTextInput itemId value ->
+        GotHsluvTextInput name value ->
             let
                 updateItem item =
                     case parseHsluv value of
@@ -245,9 +262,12 @@ update msg model =
                                 , hsluvValid = False
                             }
             in
-            { model | themeColors = Array.update itemId updateItem model.themeColors }
+            { model
+                | themeColorsByName =
+                    Dict.update name (Maybe.map updateItem) model.themeColorsByName
+            }
 
-        GotHsluvRangeInput itemId component value ->
+        GotHsluvRangeInput name component value ->
             let
                 updateItem item =
                     let
@@ -263,7 +283,10 @@ update msg model =
                         , hsluvInput = hsluvToString <| newHsluv
                     }
             in
-            { model | themeColors = Array.update itemId updateItem model.themeColors }
+            { model
+                | themeColorsByName =
+                    Dict.update name (Maybe.map updateItem) model.themeColorsByName
+            }
 
         Noop ->
             model
@@ -550,18 +573,22 @@ view model =
 
 appView : Model -> Element Msg
 appView model =
+    let
+        themeColors =
+            getThemeColors model
+    in
     column [ spacingDefault, width fill ]
         [ row [ spacingDefault, width fill ]
             [ inputView model.inputText
-            , outputView model.themeColors
+            , outputView themeColors
             ]
-        , themeColorsView model.themeColors
+        , themeColorsView themeColors
         ]
 
 
-themeColorsView : Array ThemeColor -> Element Msg
+themeColorsView : List ThemeColor -> Element Msg
 themeColorsView themeColors =
-    if Array.isEmpty themeColors then
+    if themeColors == [] then
         el
             [ Font.color errColor ]
             (text "No colors found.")
@@ -570,10 +597,7 @@ themeColorsView themeColors =
         column [ spacingSmall, width fill ]
             [ themeColorsHeaderView
             , column [ width fill ]
-                (themeColors
-                    |> Array.toList
-                    |> List.indexedMap themeColorView
-                )
+                (List.map themeColorView themeColors)
             ]
 
 
@@ -596,8 +620,8 @@ themeColorsHeaderView =
         ]
 
 
-themeColorView : Int -> ThemeColor -> Element Msg
-themeColorView itemId item =
+themeColorView : ThemeColor -> Element Msg
+themeColorView item =
     let
         rangeInputs =
             [ Hue, Saturation, Lightness ]
@@ -605,7 +629,7 @@ themeColorView itemId item =
                     (\c ->
                         hsluvRangeInput
                             { component = c
-                            , onChange = GotHsluvRangeInput itemId c
+                            , onChange = GotHsluvRangeInput item.name c
                             , value = getHsluvComponent c item.hsluvComponents
                             }
                     )
@@ -615,7 +639,7 @@ themeColorView itemId item =
                 (text item.name)
             , hsluvInput
                 { label = item.name
-                , onChange = GotHsluvTextInput itemId
+                , onChange = GotHsluvTextInput item.name
                 , value = item.hsluvInput
                 , valid = item.hsluvValid
                 }
@@ -731,12 +755,11 @@ inputView value =
         }
 
 
-outputView : Array ThemeColor -> Element Msg
+outputView : List ThemeColor -> Element Msg
 outputView colors =
     let
         outputText =
             colors
-                |> Array.toList
                 |> List.map toCssValue
                 |> String.join "\n"
 
