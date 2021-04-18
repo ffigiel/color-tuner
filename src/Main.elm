@@ -197,11 +197,11 @@ init : Model
 init =
     let
         initText =
-            """--green-50: #ECFDF5;
+            """--green-50: rgb(236, 253, 245);
 --green-100: #D1FAE5;
 --green-200: #A7F3D0;
 --green-300: #6EE7B7;
---green-400: #34D399;
+--green-400: #3D9;
 --green-500: #10B981;
 --green-600: #059669;
 --green-700: #047857;
@@ -377,6 +377,32 @@ cssNameParser =
 
 cssColorParser : Parser Color
 cssColorParser =
+    Parser.oneOf
+        [ rgbColorParser
+        , hexColorParser
+        ]
+
+
+rgbColorParser : Parser Color
+rgbColorParser =
+    Parser.succeed rgb255
+        |. Parser.symbol "rgb("
+        |. Parser.spaces
+        |= Parser.int
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.int
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.int
+        |. Parser.spaces
+        |. Parser.symbol ")"
+
+
+hexColorParser : Parser Color
+hexColorParser =
     Parser.oneOf
         [ Parser.backtrackable hex6ColorParser
         , hex3ColorParser
