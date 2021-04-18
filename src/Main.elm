@@ -50,9 +50,6 @@ type alias HsluvComponents =
     { hue360 : Float
     , saturation : Float
     , lightness : Float
-
-    -- We don't use alpha, but we keep it for compatibility with HSLuv module
-    , alpha : Float
     }
 
 
@@ -65,7 +62,6 @@ toHsluvComponents hsluv =
     { hue360 = c.hue * 360
     , saturation = c.saturation * 100
     , lightness = c.lightness * 100
-    , alpha = c.alpha * 100
     }
 
 
@@ -75,7 +71,7 @@ fromHsluvComponents c =
         { hue = c.hue360 / 360
         , saturation = c.saturation / 100
         , lightness = c.lightness / 100
-        , alpha = c.alpha / 100
+        , alpha = 1
         }
 
 
