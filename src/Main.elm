@@ -31,6 +31,7 @@ type Msg
 
 type alias Model =
     { inputText : String
+    , inputErrors : List String
     , themeColorNames : List String
     , themeColorsByName : Dict String ThemeColor
     }
@@ -213,6 +214,7 @@ init =
 
         model =
             { inputText = ""
+            , inputErrors = []
             , themeColorNames = []
             , themeColorsByName = Dict.empty
             }
@@ -229,20 +231,22 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         GotInputText value ->
-            let
-                themeColors =
-                    parseCssInput value
+            case parseCssInput value of
+                Ok themeColors ->
+                    { model
+                        | inputText = value
+                        , inputErrors = []
+                        , themeColorNames = List.map .name themeColors
+                        , themeColorsByName =
+                            List.map (\c -> ( c.name, c )) themeColors
+                                |> Dict.fromList
+                    }
 
-                themeColorNames =
-                    List.map .name themeColors
-            in
-            { model
-                | inputText = value
-                , themeColorNames = themeColorNames
-                , themeColorsByName =
-                    List.map2 Tuple.pair themeColorNames themeColors
-                        |> Dict.fromList
-            }
+                Err errors ->
+                    { model
+                        | inputText = value
+                        , inputErrors = List.map deadEndToString errors
+                    }
 
         GotHsluvTextInput name value ->
             let
@@ -331,7 +335,7 @@ setHsluvComponent c v cs =
             { cs | lightness = v }
 
 
-parseCssInput : String -> List ThemeColor
+parseCssInput : String -> Result (List Parser.DeadEnd) (List ThemeColor)
 parseCssInput value =
     let
         newItem ( name, color ) =
@@ -339,19 +343,17 @@ parseCssInput value =
                 hsluv =
                     rgbToHsluv color
             in
-            Just
-                { name = name
-                , originalColor = color
-                , newColor = color
-                , hsluvInput = hsluvToString hsluv
-                , hsluvValid = True
-                , hsluvComponents = toHsluvComponents hsluv
-                }
+            { name = name
+            , originalColor = color
+            , newColor = color
+            , hsluvInput = hsluvToString hsluv
+            , hsluvValid = True
+            , hsluvComponents = toHsluvComponents hsluv
+            }
     in
     value
         |> Parser.run cssInputParser
-        |> Result.withDefault []
-        |> List.filterMap newItem
+        |> Result.map (List.map newItem)
 
 
 type alias CssColorStmt =
@@ -504,6 +506,38 @@ hex255ShorthandParser =
         )
 
 
+deadEndToString : Parser.DeadEnd -> String
+deadEndToString de =
+    let
+        problemToString p =
+            case p of
+                Parser.Expecting s ->
+                    "Expected '" ++ s ++ "'"
+
+                Parser.ExpectingSymbol s ->
+                    "Expected '" ++ s ++ "'"
+
+                Parser.ExpectingInt ->
+                    "Expected an integer"
+
+                Parser.ExpectingFloat ->
+                    "Expected a number"
+
+                Parser.ExpectingHex ->
+                    "Expected a hex digit"
+
+                _ ->
+                    -- Debug.toString p
+                    "Invalid input"
+    in
+    "Line "
+        ++ String.fromInt de.row
+        ++ ", char "
+        ++ String.fromInt de.col
+        ++ ": "
+        ++ problemToString de.problem
+
+
 
 -- VIEW
 
@@ -582,16 +616,30 @@ appView model =
             [ inputView model.inputText
             , outputView themeColors
             ]
-        , themeColorsView themeColors
+        , if model.inputErrors /= [] then
+            inputErrorsView model.inputErrors
+
+          else
+            themeColorsView themeColors
         ]
+
+
+inputErrorsView : List String -> Element Msg
+inputErrorsView errors =
+    let
+        errorView e =
+            paragraph
+                [ Font.color errColor ]
+                [ text e ]
+    in
+    column [ width fill ]
+        (List.map errorView errors)
 
 
 themeColorsView : List ThemeColor -> Element Msg
 themeColorsView themeColors =
     if themeColors == [] then
-        el
-            [ Font.color errColor ]
-            (text "No colors found.")
+        text "No colors found."
 
     else
         column [ spacingSmall, width fill ]
