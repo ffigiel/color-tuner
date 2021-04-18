@@ -13,6 +13,7 @@ import Element.Region as Region
 import HSLuv exposing (HSLuv)
 import Hex
 import Html exposing (Html)
+import Html.Attributes as HA
 import Parser exposing ((|.), (|=), Parser)
 import Round
 import Set
@@ -552,9 +553,14 @@ errColor =
     rgb255 220 0 0
 
 
-gray : Color
-gray =
+sliderRailColor : Color
+sliderRailColor =
     rgb255 220 220 220
+
+
+outputBackgroundColor : Color
+outputBackgroundColor =
+    rgb255 245 245 245
 
 
 linkColor : Color
@@ -613,7 +619,7 @@ appView model =
     in
     column [ spacingDefault, width fill ]
         [ row [ spacingDefault, width fill ]
-            [ inputView model.inputText
+            [ inputView (model.inputErrors == []) model.inputText
             , outputView themeColors
             ]
         , if model.inputErrors /= [] then
@@ -775,7 +781,7 @@ hsluvRangeInput { component, onChange, value } =
                 [ Element.width Element.fill
                 , Element.height (Element.px 2)
                 , Element.centerY
-                , Background.color gray
+                , Background.color sliderRailColor
                 , Border.rounded 2
                 ]
                 Element.none
@@ -792,9 +798,18 @@ hsluvRangeInput { component, onChange, value } =
         }
 
 
-inputView : String -> Element Msg
-inputView value =
-    Input.multiline [ width fill ]
+inputView : Bool -> String -> Element Msg
+inputView valid value =
+    let
+        attrs =
+            if valid then
+                []
+
+            else
+                [ Border.color errColor ]
+    in
+    Input.multiline
+        (width fill :: attrs)
         { onChange = GotInputText
         , text = value
         , placeholder = Nothing
@@ -817,7 +832,12 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    Input.multiline [ width fill, height fill ]
+    Input.multiline
+        [ width fill
+        , height fill
+        , htmlAttribute <| HA.attribute "readonly" ""
+        , Background.color outputBackgroundColor
+        ]
         { onChange = always Noop
         , text = outputText
         , placeholder = Nothing
