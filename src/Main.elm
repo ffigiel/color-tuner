@@ -46,13 +46,36 @@ type alias ThemeColor =
 
 
 type alias HsluvComponents =
-    { hue : Float
+    { hue360 : Float
     , saturation : Float
     , lightness : Float
 
     -- We don't use alpha, but we keep it for compatibility with HSLuv module
     , alpha : Float
     }
+
+
+toHsluvComponents : HSLuv -> HsluvComponents
+toHsluvComponents hsluv =
+    let
+        c =
+            HSLuv.toHsluv hsluv
+    in
+    { hue360 = c.hue * 360
+    , saturation = c.saturation * 100
+    , lightness = c.lightness * 100
+    , alpha = c.alpha * 100
+    }
+
+
+fromHsluvComponents : HsluvComponents -> HSLuv
+fromHsluvComponents c =
+    HSLuv.hsluv
+        { hue = c.hue360 / 360
+        , saturation = c.saturation / 100
+        , lightness = c.lightness / 100
+        , alpha = c.alpha / 100
+        }
 
 
 type HsluvComponent
@@ -252,7 +275,7 @@ update msg model =
                             { item
                                 | hsluvInput = value
                                 , hsluvValid = True
-                                , hsluvComponents = HSLuv.toHsluv hsluv
+                                , hsluvComponents = toHsluvComponents hsluv
                                 , newColor = hsluvToRgb hsluv
                             }
 
@@ -272,7 +295,7 @@ update msg model =
                             setHsluvComponent component value item.hsluvComponents
 
                         newHsluv =
-                            HSLuv.hsluv newComponents
+                            fromHsluvComponents newComponents
                     in
                     { item
                         | newColor = hsluvToRgb newHsluv
@@ -303,7 +326,7 @@ getHsluvComponent : HsluvComponent -> HsluvComponents -> Float
 getHsluvComponent c cs =
     case c of
         Hue ->
-            cs.hue
+            cs.hue360
 
         Saturation ->
             cs.saturation
@@ -316,7 +339,7 @@ setHsluvComponent : HsluvComponent -> Float -> HsluvComponents -> HsluvComponent
 setHsluvComponent c v cs =
     case c of
         Hue ->
-            { cs | hue = v }
+            { cs | hue360 = v }
 
         Saturation ->
             { cs | saturation = v }
@@ -341,7 +364,7 @@ parseCssInput value =
                         , newColor = color
                         , hsluvInput = hsluvToString hsluv
                         , hsluvValid = True
-                        , hsluvComponents = HSLuv.toHsluv hsluv
+                        , hsluvComponents = toHsluvComponents hsluv
                         }
 
                 Nothing ->
@@ -610,13 +633,13 @@ hsluvRangeInput :
     -> Element Msg
 hsluvRangeInput { component, onChange, value } =
     let
-        sliderStep =
+        sliderMax =
             case component of
                 Hue ->
-                    Just (1 / 100 / 360)
+                    360
 
                 _ ->
-                    Just (1 / 100 / 100)
+                    100
     in
     Input.slider
         [ height <| px rem
@@ -634,8 +657,8 @@ hsluvRangeInput { component, onChange, value } =
         { onChange = onChange
         , label = Input.labelHidden <| hsluvComponentToString component
         , min = 0
-        , max = 1
-        , step = sliderStep
+        , max = sliderMax
+        , step = Just 0.01
         , value = value
         , thumb =
             Input.defaultThumb
