@@ -8,6 +8,7 @@ import Element.Input as Input
 import Element.Region as Region
 import Html exposing (Html)
 import Html.Attributes as HA
+import Round
 import Types exposing (..)
 
 
@@ -123,7 +124,9 @@ themeColorsView themeColors =
         column [ spacingSmall, width fill ]
             [ themeColorsHeaderView
             , column [ width fill ]
-                (List.map themeColorView themeColors)
+                (themeAverageView themeColors
+                    :: List.map themeColorView themeColors
+                )
             ]
 
 
@@ -145,6 +148,58 @@ themeColorsHeaderView =
         , el [ width fill ] (text "Lightness")
         , el [ width <| px previewColWidth ] (text "Preview")
         ]
+
+
+themeAverageView : List ThemeColor -> Element Msg
+themeAverageView themeColors =
+    let
+        numColors =
+            toFloat <| List.length themeColors
+
+        ( totH, totS, totL ) =
+            List.foldl
+                (\color ( h, s, l ) ->
+                    ( h + color.components.h.value
+                    , s + color.components.s.value
+                    , l + color.components.l.value
+                    )
+                )
+                ( 0, 0, 0 )
+                themeColors
+
+        ( avgH, avgS, avgL ) =
+            ( totH / numColors, totS / numColors, totL / numColors )
+
+        rangeInputs =
+            [ ( Hue, avgH ), ( Saturation, avgS ), ( Lightness, avgL ) ]
+                |> List.map
+                    (\( hsl, avg ) ->
+                        row [ spacingSmall, width fill ]
+                            [ themeColorComponentRangeInput
+                                { hsl = hsl
+                                , onChange = GotAverageRangeInput hsl avg
+                                , value = avg
+                                }
+                            , el
+                                [ width <| px componentInputWidth
+                                ]
+                                (text <| Round.round 2 avg)
+                            ]
+                    )
+
+        children =
+            el [ width <| px nameColWidth ]
+                (text "Average")
+                :: rangeInputs
+                ++ [ row [ width <| px (colorSwatchWidth * 4) ] []
+                   ]
+    in
+    row
+        [ spacingDefault
+        , width fill
+        , height <| px colorSwatchHeight
+        ]
+        children
 
 
 themeColorView : ThemeColor -> Element Msg

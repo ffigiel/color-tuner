@@ -12,7 +12,7 @@ module Types exposing
     , hsluvToString
     , init
     , rgbToString
-    , setThemeColorComponents
+    , setThemeColorComponent
     , toHsluvComponents
     )
 
@@ -28,10 +28,11 @@ import Round
 
 
 type Msg
-    = GotInputText String
-    | Noop
+    = Noop
+    | GotInputText String
     | GotHsluvTextInput String HSL String
     | GotHsluvRangeInput String HSL Float
+    | GotAverageRangeInput HSL Float Float
 
 
 type alias Model =
@@ -142,8 +143,8 @@ getThemeColorComponents c cs =
             cs.l
 
 
-setThemeColorComponents : HSL -> ThemeColorComponent -> ThemeColorComponents -> ThemeColorComponents
-setThemeColorComponents hsl c cs =
+setThemeColorComponent : HSL -> ThemeColorComponent -> ThemeColorComponents -> ThemeColorComponents
+setThemeColorComponent hsl c cs =
     case hsl of
         Hue ->
             { cs | h = c }

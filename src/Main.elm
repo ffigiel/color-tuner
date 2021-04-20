@@ -27,6 +27,9 @@ main =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        Noop ->
+            model
+
         GotInputText value ->
             case Parsers.parseCssInput value of
                 Ok themeColors ->
@@ -68,7 +71,7 @@ update msg model =
                                     }
 
                         newComponents =
-                            setThemeColorComponents hsl newComponent item.components
+                            setThemeColorComponent hsl newComponent item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
@@ -95,7 +98,7 @@ update msg model =
                             }
 
                         newComponents =
-                            setThemeColorComponents hsl newComponent item.components
+                            setThemeColorComponent hsl newComponent item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
@@ -107,5 +110,35 @@ update msg model =
                     Dict.update name (Maybe.map updateItem) model.themeColorsByName
             }
 
-        Noop ->
-            model
+        GotAverageRangeInput hsl old new ->
+            let
+                d =
+                    new - old
+
+                updateItem item =
+                    let
+                        component =
+                            getThemeColorComponents hsl item.components
+
+                        newValue =
+                            component.value + d
+
+                        newComponent =
+                            { component
+                                | input = String.fromFloat newValue
+                                , valid = True
+                                , value = newValue
+                            }
+
+                        newComponents =
+                            setThemeColorComponent hsl newComponent item.components
+                    in
+                    { item
+                        | newColor = colorFromComponents newComponents
+                        , components = newComponents
+                    }
+            in
+            { model
+                | themeColorsByName =
+                    Dict.map (always updateItem) model.themeColorsByName
+            }
