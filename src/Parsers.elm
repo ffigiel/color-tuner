@@ -1,48 +1,13 @@
-module Parsers exposing (deadEndToString, parseCssInput, parseHsluv)
+module Parsers exposing (deadEndToString, parseCssInput)
 
 import Color
 import Element exposing (Color)
-import HSLuv exposing (HSLuv)
+import HSLuv
 import Hex
 import Parser exposing ((|.), (|=), Parser)
 import Round
 import Set
-import Types exposing (ThemeColor, toHsluvComponents)
-
-
-parseHsluv : String -> Maybe HSLuv
-parseHsluv s =
-    s
-        |> String.toLower
-        |> Parser.run hsluvParser
-        |> Result.toMaybe
-
-
-hsluvParser : Parser HSLuv
-hsluvParser =
-    let
-        hsluvFromFloats h s l =
-            HSLuv.hsluv360
-                { hue = h
-                , saturation = s
-                , lightness = l
-                , alpha = 1
-                }
-    in
-    Parser.succeed hsluvFromFloats
-        |. Parser.symbol "hsluv("
-        |. Parser.spaces
-        |= Parser.float
-        |. Parser.spaces
-        |. Parser.symbol ","
-        |. Parser.spaces
-        |= Parser.float
-        |. Parser.spaces
-        |. Parser.symbol ","
-        |. Parser.spaces
-        |= Parser.float
-        |. Parser.spaces
-        |. Parser.symbol ")"
+import Types exposing (ThemeColor)
 
 
 parseCssInput : String -> Result (List Parser.DeadEnd) (List ThemeColor)
@@ -51,42 +16,31 @@ parseCssInput value =
         newItem : ( String, Color ) -> ThemeColor
         newItem ( name, color ) =
             let
-                hsluv =
-                    rgbToHsluv color
+                c =
+                    color
+                        |> Element.toRgb
+                        |> HSLuv.rgba
+                        |> HSLuv.toHsluv
 
-                hsluvComponents =
-                    toHsluvComponents hsluv
+                newComponent v =
+                    { input = Round.round 2 v
+                    , valid = True
+                    , value = v
+                    }
             in
             { name = name
             , originalColor = color
             , newColor = color
             , components =
-                { h =
-                    { input = Round.round 2 hsluvComponents.hue360
-                    , value = hsluvComponents.hue360
-                    , valid = True
-                    }
-                , s =
-                    { input = Round.round 2 hsluvComponents.saturation
-                    , value = hsluvComponents.saturation
-                    , valid = True
-                    }
-                , l =
-                    { input = Round.round 2 hsluvComponents.lightness
-                    , value = hsluvComponents.lightness
-                    , valid = True
-                    }
+                { h = newComponent (c.hue * 360)
+                , s = newComponent (c.saturation * 100)
+                , l = newComponent (c.lightness * 100)
                 }
             }
     in
     value
         |> Parser.run cssInputParser
         |> Result.map (List.map newItem)
-
-
-rgbToHsluv : Color -> HSLuv
-rgbToHsluv rgb =
-    Element.toRgb rgb |> HSLuv.rgba
 
 
 type alias CssColorStmt =

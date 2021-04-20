@@ -1,11 +1,9 @@
 module Types exposing
     ( HSL(..)
-    , HsluvComponents
     , Model
     , Msg(..)
     , ThemeColor
     , colorFromComponents
-    , fromHsluvComponents
     , getThemeColorComponents
     , getThemeColors
     , hslToString
@@ -13,7 +11,6 @@ module Types exposing
     , init
     , rgbToString
     , setThemeColorComponent
-    , toHsluvComponents
     )
 
 import Dict exposing (Dict)
@@ -119,17 +116,6 @@ hslToString c =
             "lightness"
 
 
-
--- HsluvComponents
-
-
-type alias HsluvComponents =
-    { hue360 : Float
-    , saturation : Float
-    , lightness : Float
-    }
-
-
 getThemeColorComponents : HSL -> ThemeColorComponents -> ThemeColorComponent
 getThemeColorComponents c cs =
     case c of
@@ -154,28 +140,6 @@ setThemeColorComponent hsl c cs =
 
         Lightness ->
             { cs | l = c }
-
-
-toHsluvComponents : HSLuv -> HsluvComponents
-toHsluvComponents hsluv =
-    let
-        c =
-            HSLuv.toHsluv hsluv
-    in
-    { hue360 = c.hue * 360
-    , saturation = c.saturation * 100
-    , lightness = c.lightness * 100
-    }
-
-
-fromHsluvComponents : HsluvComponents -> HSLuv
-fromHsluvComponents c =
-    HSLuv.hsluv
-        { hue = c.hue360 / 360
-        , saturation = c.saturation / 100
-        , lightness = c.lightness / 100
-        , alpha = 1
-        }
 
 
 colorFromComponents : ThemeColorComponents -> Color
