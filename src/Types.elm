@@ -1,17 +1,18 @@
 module Types exposing
-    ( HsluvComponent(..)
+    ( HSL(..)
     , HsluvComponents
     , Model
     , Msg(..)
     , ThemeColor
+    , colorFromComponents
     , fromHsluvComponents
-    , getHsluvComponent
+    , getThemeColorComponents
     , getThemeColors
-    , hsluvComponentToString
+    , hslToString
     , hsluvToString
     , init
     , rgbToString
-    , setHsluvComponent
+    , setThemeColorComponents
     , toHsluvComponents
     )
 
@@ -29,8 +30,8 @@ import Round
 type Msg
     = GotInputText String
     | Noop
-    | GotHsluvTextInput String String
-    | GotHsluvRangeInput String HsluvComponent Float
+    | GotHsluvTextInput String HSL String
+    | GotHsluvRangeInput String HSL Float
 
 
 type alias Model =
@@ -76,24 +77,36 @@ type alias ThemeColor =
     { name : String
     , originalColor : Color
     , newColor : Color
-    , hsluvInput : String
-    , hsluvValid : Bool
-    , hsluvComponents : HsluvComponents
+    , components : ThemeColorComponents
+    }
+
+
+type alias ThemeColorComponents =
+    { h : ThemeColorComponent
+    , s : ThemeColorComponent
+    , l : ThemeColorComponent
+    }
+
+
+type alias ThemeColorComponent =
+    { input : String
+    , valid : Bool
+    , value : Float
     }
 
 
 
--- HsluvComponent
+-- HSL
 
 
-type HsluvComponent
+type HSL
     = Hue
     | Saturation
     | Lightness
 
 
-hsluvComponentToString : HsluvComponent -> String
-hsluvComponentToString c =
+hslToString : HSL -> String
+hslToString c =
     case c of
         Hue ->
             "hue"
@@ -116,30 +129,30 @@ type alias HsluvComponents =
     }
 
 
-getHsluvComponent : HsluvComponent -> HsluvComponents -> Float
-getHsluvComponent c cs =
+getThemeColorComponents : HSL -> ThemeColorComponents -> ThemeColorComponent
+getThemeColorComponents c cs =
     case c of
         Hue ->
-            cs.hue360
+            cs.h
 
         Saturation ->
-            cs.saturation
+            cs.s
 
         Lightness ->
-            cs.lightness
+            cs.l
 
 
-setHsluvComponent : HsluvComponent -> Float -> HsluvComponents -> HsluvComponents
-setHsluvComponent c v cs =
-    case c of
+setThemeColorComponents : HSL -> ThemeColorComponent -> ThemeColorComponents -> ThemeColorComponents
+setThemeColorComponents hsl c cs =
+    case hsl of
         Hue ->
-            { cs | hue360 = v }
+            { cs | h = c }
 
         Saturation ->
-            { cs | saturation = v }
+            { cs | s = c }
 
         Lightness ->
-            { cs | lightness = v }
+            { cs | l = c }
 
 
 toHsluvComponents : HSLuv -> HsluvComponents
@@ -162,6 +175,18 @@ fromHsluvComponents c =
         , lightness = c.lightness / 100
         , alpha = 1
         }
+
+
+colorFromComponents : ThemeColorComponents -> Color
+colorFromComponents c =
+    HSLuv.hsluv
+        { hue = c.h.value / 360
+        , saturation = c.s.value / 100
+        , lightness = c.l.value / 100
+        , alpha = 1
+        }
+        |> HSLuv.toRgba
+        |> Element.fromRgb
 
 
 

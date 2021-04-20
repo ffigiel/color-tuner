@@ -5,8 +5,9 @@ import Element exposing (Color)
 import HSLuv exposing (HSLuv)
 import Hex
 import Parser exposing ((|.), (|=), Parser)
+import Round
 import Set
-import Types exposing (ThemeColor, hsluvToString, toHsluvComponents)
+import Types exposing (ThemeColor, toHsluvComponents)
 
 
 parseHsluv : String -> Maybe HSLuv
@@ -47,17 +48,35 @@ hsluvParser =
 parseCssInput : String -> Result (List Parser.DeadEnd) (List ThemeColor)
 parseCssInput value =
     let
+        newItem : ( String, Color ) -> ThemeColor
         newItem ( name, color ) =
             let
                 hsluv =
                     rgbToHsluv color
+
+                hsluvComponents =
+                    toHsluvComponents hsluv
             in
             { name = name
             , originalColor = color
             , newColor = color
-            , hsluvInput = hsluvToString hsluv
-            , hsluvValid = True
-            , hsluvComponents = toHsluvComponents hsluv
+            , components =
+                { h =
+                    { input = Round.round 2 hsluvComponents.hue360
+                    , value = hsluvComponents.hue360
+                    , valid = True
+                    }
+                , s =
+                    { input = Round.round 2 hsluvComponents.saturation
+                    , value = hsluvComponents.saturation
+                    , valid = True
+                    }
+                , l =
+                    { input = Round.round 2 hsluvComponents.lightness
+                    , value = hsluvComponents.lightness
+                    , valid = True
+                    }
+                }
             }
     in
     value

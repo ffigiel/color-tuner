@@ -43,7 +43,7 @@ spacingSmall =
 
 spacingDefault : Attribute Msg
 spacingDefault =
-    spacing <| rem * 2
+    spacing <| 2 * rem
 
 
 fontMonospace : Attribute Msg
@@ -53,7 +53,7 @@ fontMonospace =
 
 paddingDefault : Attribute Msg
 paddingDefault =
-    padding <| rem * 2
+    padding <| 2 * rem
 
 
 view : Model -> Html Msg
@@ -66,7 +66,7 @@ view model =
         column
             [ spacingDefault
             , paddingDefault
-            , width (fill |> maximum (rem * 100))
+            , width (fill |> maximum (100 * rem))
             , height fill
             , centerX
             ]
@@ -127,18 +127,19 @@ themeColorsView themeColors =
             ]
 
 
+nameColWidth : number
+nameColWidth =
+    7 * rem
+
+
 themeColorsHeaderView : Element Msg
 themeColorsHeaderView =
     let
-        nameColWidth =
-            7 * rem
-
         previewColWidth =
-            (3 + 3 + 1 + 3 + 3) * rem
+            4 * colorSwatchWidth
     in
     row [ spacingDefault, width fill, Font.center ]
         [ el [ width <| px nameColWidth ] (text "Color")
-        , el [ width fill ] (text "HSLuv")
         , el [ width fill ] (text "Hue")
         , el [ width fill ] (text "Saturation")
         , el [ width fill ] (text "Lightness")
@@ -152,26 +153,31 @@ themeColorView item =
         rangeInputs =
             [ Hue, Saturation, Lightness ]
                 |> List.map
-                    (\c ->
-                        hsluvRangeInput
-                            { component = c
-                            , onChange = GotHsluvRangeInput item.name c
-                            , value = getHsluvComponent c item.hsluvComponents
-                            }
+                    (\hsl ->
+                        let
+                            component =
+                                getThemeColorComponents hsl item.components
+                        in
+                        row [ spacingSmall, width fill ]
+                            [ themeColorComponentRangeInput
+                                { hsl = hsl
+                                , onChange = GotHsluvRangeInput item.name hsl
+                                , value = component.value
+                                }
+                            , themeColorComponentInput
+                                { label = hslToString hsl
+                                , onChange = GotHsluvTextInput item.name hsl
+                                , value = component.input
+                                , valid = component.valid
+                                }
+                            ]
                     )
 
         children =
-            [ el [ width <| px (7 * rem) ]
+            el [ width <| px nameColWidth ]
                 (text item.name)
-            , hsluvInput
-                { label = item.name
-                , onChange = GotHsluvTextInput item.name
-                , value = item.hsluvInput
-                , valid = item.hsluvValid
-                }
-            ]
-                ++ rangeInputs
-                ++ [ row [ spacingSmall ]
+                :: rangeInputs
+                ++ [ row []
                         [ row []
                             [ colorSwatch item.originalColor
                             , colorSwatch item.newColor
@@ -186,12 +192,22 @@ themeColorView item =
     row [ spacingDefault, width fill ] children
 
 
+colorSwatchWidth : number
+colorSwatchWidth =
+    4 * rem
+
+
+colorSwatchHeight : number
+colorSwatchHeight =
+    3 * rem
+
+
 colorSwatch : Color -> Element Msg
 colorSwatch color =
     el
         [ Background.color color
-        , width <| px (rem * 3)
-        , height <| px (rem * 3)
+        , width <| px colorSwatchWidth
+        , height <| px colorSwatchHeight
         ]
         (text "")
 
@@ -200,29 +216,38 @@ textSwatch : Color -> Element Msg
 textSwatch color =
     el
         [ Font.color color
-        , width <| px (rem * 3)
-        , height <| px (rem * 3)
+        , width <| px colorSwatchWidth
+        , height <| px colorSwatchHeight
         , centerX
         , centerY
         ]
         (el [ centerX, centerY ] (text "Aa"))
 
 
-hsluvInput :
+componentInputWidth : number
+componentInputWidth =
+    5 * rem
+
+
+themeColorComponentInput :
     { label : String
     , onChange : String -> Msg
     , value : String
     , valid : Bool
     }
     -> Element Msg
-hsluvInput { label, onChange, value, valid } =
+themeColorComponentInput { label, onChange, value, valid } =
     let
+        baseAttrs =
+            [ width <| px componentInputWidth
+            ]
+
         attrs =
             if valid then
-                []
+                baseAttrs
 
             else
-                [ Border.color errColor ]
+                Border.color errColor :: baseAttrs
     in
     Input.text
         attrs
@@ -233,13 +258,13 @@ hsluvInput { label, onChange, value, valid } =
         }
 
 
-hsluvRangeInput :
-    { component : HsluvComponent, onChange : Float -> Msg, value : Float }
+themeColorComponentRangeInput :
+    { hsl : HSL, onChange : Float -> Msg, value : Float }
     -> Element Msg
-hsluvRangeInput { component, onChange, value } =
+themeColorComponentRangeInput { hsl, onChange, value } =
     let
         sliderMax =
-            case component of
+            case hsl of
                 Hue ->
                     360
 
@@ -260,7 +285,7 @@ hsluvRangeInput { component, onChange, value } =
             )
         ]
         { onChange = onChange
-        , label = Input.labelHidden <| hsluvComponentToString component
+        , label = Input.labelHidden <| hslToString hsl
         , min = 0
         , max = sliderMax
         , step = Just 0.01

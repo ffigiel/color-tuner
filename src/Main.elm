@@ -2,17 +2,9 @@ module Main exposing (main)
 
 import Browser
 import Dict
-import Element exposing (Color)
-import HSLuv exposing (HSLuv)
 import Parsers
 import Types exposing (..)
 import View exposing (view)
-
-
-hsluvToRgb : HSLuv -> Color
-hsluvToRgb hsluv =
-    HSLuv.toRgba hsluv
-        |> Element.fromRgb
 
 
 
@@ -53,43 +45,61 @@ update msg model =
                         , inputErrors = List.map Parsers.deadEndToString errors
                     }
 
-        GotHsluvTextInput name value ->
+        GotHsluvTextInput name hsl s ->
             let
                 updateItem item =
-                    case Parsers.parseHsluv value of
-                        Just hsluv ->
-                            { item
-                                | hsluvInput = value
-                                , hsluvValid = True
-                                , hsluvComponents = toHsluvComponents hsluv
-                                , newColor = hsluvToRgb hsluv
-                            }
+                    let
+                        component =
+                            getThemeColorComponents hsl item.components
 
-                        Nothing ->
-                            { item
-                                | hsluvInput = value
-                                , hsluvValid = False
-                            }
+                        newComponent =
+                            case String.toFloat s of
+                                Just value ->
+                                    { component
+                                        | input = s
+                                        , valid = True
+                                        , value = value
+                                    }
+
+                                Nothing ->
+                                    { component
+                                        | input = s
+                                        , valid = False
+                                    }
+
+                        newComponents =
+                            setThemeColorComponents hsl newComponent item.components
+                    in
+                    { item
+                        | newColor = colorFromComponents newComponents
+                        , components = newComponents
+                    }
             in
             { model
                 | themeColorsByName =
                     Dict.update name (Maybe.map updateItem) model.themeColorsByName
             }
 
-        GotHsluvRangeInput name component value ->
+        GotHsluvRangeInput name hsl value ->
             let
                 updateItem item =
                     let
-                        newComponents =
-                            setHsluvComponent component value item.hsluvComponents
+                        component =
+                            getThemeColorComponents hsl item.components
 
-                        newHsluv =
-                            fromHsluvComponents newComponents
+                        newComponent =
+                            { component
+                                | input = String.fromFloat value
+                                , valid = True
+                                , value = value
+                            }
+
+                        newComponents =
+                            setThemeColorComponents hsl newComponent item.components
                     in
                     { item
-                        | newColor = hsluvToRgb newHsluv
-                        , hsluvComponents = newComponents
-                        , hsluvInput = hsluvToString <| newHsluv
+                        | newColor = colorFromComponents newComponents
+                        , components = newComponents
                     }
             in
             { model
