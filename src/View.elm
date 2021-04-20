@@ -211,13 +211,13 @@ themeColorView item =
                     (\hsl ->
                         let
                             component =
-                                getThemeColorComponents hsl item.components
+                                getThemeColorComponent hsl item.components
                         in
                         row [ spacingSmall, width fill ]
                             [ themeColorComponentRangeInput
                                 { hsl = hsl
                                 , onChange = GotHsluvRangeInput item.name hsl
-                                , value = component.value
+                                , value = component.normalizedValue
                                 }
                             , themeColorComponentInput
                                 { label = hslToString hsl

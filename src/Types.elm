@@ -4,12 +4,13 @@ module Types exposing
     , Msg(..)
     , ThemeColor
     , colorFromComponents
-    , getThemeColorComponents
+    , getThemeColorComponent
     , getThemeColors
     , hslToString
     , hsluvToString
     , init
     , rgbToString
+    , setComponentValue
     , setThemeColorComponent
     )
 
@@ -90,6 +91,7 @@ type alias ThemeColorComponent =
     { input : String
     , valid : Bool
     , value : Float
+    , normalizedValue : Float
     }
 
 
@@ -116,8 +118,45 @@ hslToString c =
             "lightness"
 
 
-getThemeColorComponents : HSL -> ThemeColorComponents -> ThemeColorComponent
-getThemeColorComponents c cs =
+setComponentValue : HSL -> Float -> ThemeColorComponents -> ThemeColorComponents
+setComponentValue hsl v cs =
+    let
+        c =
+            getThemeColorComponent hsl cs
+
+        normalized =
+            case hsl of
+                Hue ->
+                    modClamp 360 v
+
+                _ ->
+                    clamp 0 100 v
+
+        newC =
+            { c
+                | input = Round.round 2 normalized
+                , valid = True
+                , value = v
+                , normalizedValue = normalized
+            }
+    in
+    setThemeColorComponent hsl newC cs
+
+
+modClamp : number -> number -> number
+modClamp m f =
+    if f < 0 then
+        modClamp m (f + m)
+
+    else if f > m then
+        modClamp m (f - m)
+
+    else
+        f
+
+
+getThemeColorComponent : HSL -> ThemeColorComponents -> ThemeColorComponent
+getThemeColorComponent c cs =
     case c of
         Hue ->
             cs.h
@@ -145,9 +184,9 @@ setThemeColorComponent hsl c cs =
 colorFromComponents : ThemeColorComponents -> Color
 colorFromComponents c =
     HSLuv.hsluv
-        { hue = c.h.value / 360
-        , saturation = c.s.value / 100
-        , lightness = c.l.value / 100
+        { hue = c.h.normalizedValue / 360
+        , saturation = c.s.normalizedValue / 100
+        , lightness = c.l.normalizedValue / 100
         , alpha = 1
         }
         |> HSLuv.toRgba

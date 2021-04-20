@@ -26,6 +26,7 @@ parseCssInput value =
                     { input = Round.round 2 v
                     , valid = True
                     , value = v
+                    , normalizedValue = v
                     }
             in
             { name = name

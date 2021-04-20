@@ -53,25 +53,20 @@ update msg model =
                 updateItem item =
                     let
                         component =
-                            getThemeColorComponents hsl item.components
-
-                        newComponent =
-                            case String.toFloat s of
-                                Just value ->
-                                    { component
-                                        | input = s
-                                        , valid = True
-                                        , value = value
-                                    }
-
-                                Nothing ->
-                                    { component
-                                        | input = s
-                                        , valid = False
-                                    }
+                            getThemeColorComponent hsl item.components
 
                         newComponents =
-                            setThemeColorComponent hsl newComponent item.components
+                            case String.toFloat s of
+                                Just value ->
+                                    setComponentValue hsl value item.components
+
+                                Nothing ->
+                                    setThemeColorComponent hsl
+                                        { component
+                                            | input = s
+                                            , valid = False
+                                        }
+                                        item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
@@ -87,18 +82,8 @@ update msg model =
             let
                 updateItem item =
                     let
-                        component =
-                            getThemeColorComponents hsl item.components
-
-                        newComponent =
-                            { component
-                                | input = String.fromFloat value
-                                , valid = True
-                                , value = value
-                            }
-
                         newComponents =
-                            setThemeColorComponent hsl newComponent item.components
+                            setComponentValue hsl value item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
@@ -118,20 +103,13 @@ update msg model =
                 updateItem item =
                     let
                         component =
-                            getThemeColorComponents hsl item.components
+                            getThemeColorComponent hsl item.components
 
                         newValue =
                             component.value + d
 
-                        newComponent =
-                            { component
-                                | input = String.fromFloat newValue
-                                , valid = True
-                                , value = newValue
-                            }
-
                         newComponents =
-                            setThemeColorComponent hsl newComponent item.components
+                            setComponentValue hsl newValue item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
