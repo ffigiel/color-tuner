@@ -4,10 +4,10 @@ module Types exposing
     , Msg(..)
     , ThemeColor
     , colorFromComponents
+    , componentFromValue
     , getThemeColorComponent
     , getThemeColors
     , hslToString
-    , hsluvToString
     , init
     , rgbToString
     , setComponentValue
@@ -16,7 +16,7 @@ module Types exposing
 
 import Dict exposing (Dict)
 import Element exposing (Color)
-import HSLuv exposing (HSLuv)
+import HSLuv
 import Hex
 import Round
 
@@ -118,6 +118,15 @@ hslToString c =
             "lightness"
 
 
+componentFromValue : HSL -> Float -> ThemeColorComponent
+componentFromValue hsl v =
+    { input = Round.round 2 v
+    , valid = True
+    , value = v
+    , normalizedValue = normalizeComponentValue hsl v
+    }
+
+
 setComponentValue : HSL -> Float -> ThemeColorComponents -> ThemeColorComponents
 setComponentValue hsl v cs =
     let
@@ -125,12 +134,7 @@ setComponentValue hsl v cs =
             getThemeColorComponent hsl cs
 
         normalized =
-            case hsl of
-                Hue ->
-                    modClamp 360 v
-
-                _ ->
-                    clamp 0 100 v
+            normalizeComponentValue hsl v
 
         newC =
             { c
@@ -141,6 +145,16 @@ setComponentValue hsl v cs =
             }
     in
     setThemeColorComponent hsl newC cs
+
+
+normalizeComponentValue : HSL -> Float -> Float
+normalizeComponentValue hsl v =
+    case hsl of
+        Hue ->
+            modClamp 360 v
+
+        _ ->
+            clamp 0 100 v
 
 
 modClamp : number -> number -> number
@@ -215,29 +229,3 @@ rgbToString color =
         |> List.map componentToString
         |> String.join ""
         |> (++) "#"
-
-
-hsluvToString : HSLuv -> String
-hsluvToString color =
-    let
-        components =
-            HSLuv.toHsluv color
-
-        stringComponents =
-            [ components.hue * 360
-            , components.saturation * 100
-            , components.lightness * 100
-            ]
-                |> List.map smartRound
-
-        smartRound : Float -> String
-        smartRound n =
-            if n == toFloat (floor n) then
-                Round.round 0 n
-
-            else
-                Round.round 2 n
-    in
-    "hsluv("
-        ++ String.join ", " stringComponents
-        ++ ")"

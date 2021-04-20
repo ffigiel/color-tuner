@@ -5,9 +5,8 @@ import Element exposing (Color)
 import HSLuv
 import Hex
 import Parser exposing ((|.), (|=), Parser)
-import Round
 import Set
-import Types exposing (ThemeColor)
+import Types exposing (HSL(..), ThemeColor, componentFromValue)
 
 
 parseCssInput : String -> Result (List Parser.DeadEnd) (List ThemeColor)
@@ -21,21 +20,14 @@ parseCssInput value =
                         |> Element.toRgb
                         |> HSLuv.rgba
                         |> HSLuv.toHsluv
-
-                newComponent v =
-                    { input = Round.round 2 v
-                    , valid = True
-                    , value = v
-                    , normalizedValue = v
-                    }
             in
             { name = name
             , originalColor = color
             , newColor = color
             , components =
-                { h = newComponent (c.hue * 360)
-                , s = newComponent (c.saturation * 100)
-                , l = newComponent (c.lightness * 100)
+                { h = componentFromValue Hue (c.hue * 360)
+                , s = componentFromValue Saturation (c.saturation * 100)
+                , l = componentFromValue Lightness (c.lightness * 100)
                 }
             }
     in
