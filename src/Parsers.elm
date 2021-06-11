@@ -93,15 +93,23 @@ rgbColorParser =
         |. Parser.spaces
         |= Parser.int
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.int
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.int
         |. Parser.spaces
         |. Parser.symbol ")"
+
+
+optionalComma =
+    Parser.oneOf
+        [ Parser.succeed ()
+            |. Parser.symbol ","
+        , Parser.succeed ()
+        ]
 
 
 hslColorParser : Parser Color
@@ -117,12 +125,12 @@ hslColorParser =
         |. Parser.spaces
         |= Parser.float
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.float
         |. Parser.symbol "%"
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.float
         |. Parser.symbol "%"
@@ -144,12 +152,12 @@ hsluvColorParser =
         |. Parser.spaces
         |= Parser.float
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.float
         |. Parser.symbol "%"
         |. Parser.spaces
-        |. Parser.symbol ","
+        |. optionalComma
         |. Parser.spaces
         |= Parser.float
         |. Parser.symbol "%"
