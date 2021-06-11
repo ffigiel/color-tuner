@@ -58,7 +58,7 @@ update msg model =
                         newComponents =
                             case String.toFloat s of
                                 Just value ->
-                                    setComponentValue hsl value item.components
+                                    setComponentValue (Just s) hsl value item.components
 
                                 Nothing ->
                                     setThemeColorComponent hsl
@@ -83,7 +83,7 @@ update msg model =
                 updateItem item =
                     let
                         newComponents =
-                            setComponentValue hsl value item.components
+                            setComponentValue Nothing hsl value item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents
@@ -109,7 +109,7 @@ update msg model =
                             component.value + d
 
                         newComponents =
-                            setComponentValue hsl newValue item.components
+                            setComponentValue Nothing hsl newValue item.components
                     in
                     { item
                         | newColor = colorFromComponents newComponents

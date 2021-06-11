@@ -127,8 +127,8 @@ componentFromValue hsl v =
     }
 
 
-setComponentValue : HSL -> Float -> ThemeColorComponents -> ThemeColorComponents
-setComponentValue hsl v cs =
+setComponentValue : Maybe String -> HSL -> Float -> ThemeColorComponents -> ThemeColorComponents
+setComponentValue mInput hsl v cs =
     let
         c =
             getThemeColorComponent hsl cs
@@ -138,7 +138,7 @@ setComponentValue hsl v cs =
 
         newC =
             { c
-                | input = Round.round 2 normalized
+                | input = Maybe.withDefault (Round.round 2 normalized) mInput
                 , valid = True
                 , value = v
                 , normalizedValue = normalized
