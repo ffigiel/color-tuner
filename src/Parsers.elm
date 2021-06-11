@@ -1,7 +1,6 @@
 module Parsers exposing (deadEndToString, parseCssInput)
 
-import Color
-import Element exposing (Color)
+import Color exposing (Color)
 import HSLuv
 import Hex
 import Parser exposing ((|.), (|=), Parser)
@@ -17,7 +16,7 @@ parseCssInput value =
             let
                 c =
                     color
-                        |> Element.toRgb
+                        |> Color.toRgba
                         |> HSLuv.rgba
                         |> HSLuv.toHsluv
             in
@@ -89,7 +88,7 @@ cssColorParser =
 
 rgbColorParser : Parser Color
 rgbColorParser =
-    Parser.succeed Element.rgb255
+    Parser.succeed Color.rgb255
         |. Parser.symbol "rgb("
         |. Parser.spaces
         |= Parser.int
@@ -111,7 +110,7 @@ hslColorParser =
         hslToColor h s l =
             Color.hsl (h / 360) (s / 100) (l / 100)
                 |> Color.toRgba
-                |> Element.fromRgb
+                |> Color.fromRgba
     in
     Parser.succeed hslToColor
         |. Parser.symbol "hsl("
@@ -138,7 +137,7 @@ hsluvColorParser =
             ( h, s, l )
                 |> HSLuv.hsluvToRgb
                 |> (\( r, g, b ) -> { red = r, green = g, blue = b, alpha = 1 })
-                |> Element.fromRgb
+                |> Color.fromRgba
     in
     Parser.succeed hslToColor
         |. Parser.symbol "hsluv("
@@ -168,7 +167,7 @@ hexColorParser =
 
 hex6ColorParser : Parser Color
 hex6ColorParser =
-    Parser.succeed Element.rgb255
+    Parser.succeed Color.rgb255
         |. Parser.symbol "#"
         |= hex255Parser
         |= hex255Parser
@@ -177,7 +176,7 @@ hex6ColorParser =
 
 hex3ColorParser : Parser Color
 hex3ColorParser =
-    Parser.succeed Element.rgb255
+    Parser.succeed Color.rgb255
         |. Parser.symbol "#"
         |= hex255ShorthandParser
         |= hex255ShorthandParser

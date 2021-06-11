@@ -1,97 +1,72 @@
 module View exposing (view)
 
-import Element exposing (..)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
-import Element.Region as Region
-import Html exposing (Html)
+import Color exposing (Color)
+import Html as H exposing (Attribute, Html)
 import Html.Attributes as HA
+import Html.Events as HE
 import Round
 import Types exposing (..)
 
 
-rem : number
-rem =
-    16
+column : List (Attribute msg) -> List (Html msg) -> Html msg
+column attrs children =
+    H.div (HA.class "column" :: attrs) children
 
 
-errColor : Color
-errColor =
-    rgb255 220 0 0
+columnSmall : List (Attribute msg) -> List (Html msg) -> Html msg
+columnSmall attrs children =
+    H.div (HA.class "column -small" :: attrs) children
 
 
-sliderRailColor : Color
-sliderRailColor =
-    rgb255 220 220 220
+columnTight : List (Attribute msg) -> List (Html msg) -> Html msg
+columnTight attrs children =
+    H.div (HA.class "column -tight" :: attrs) children
 
 
-outputBackgroundColor : Color
-outputBackgroundColor =
-    rgb255 245 245 245
+row : List (Attribute msg) -> List (Html msg) -> Html msg
+row attrs children =
+    H.div (HA.class "row" :: attrs) children
 
 
-linkColor : Color
-linkColor =
-    rgb255 0 0 220
+rowSmall : List (Attribute msg) -> List (Html msg) -> Html msg
+rowSmall attrs children =
+    H.div (HA.class "row -small" :: attrs) children
 
 
-spacingSmall : Attribute Msg
-spacingSmall =
-    spacing <| rem
+rowTight : List (Attribute msg) -> List (Html msg) -> Html msg
+rowTight attrs children =
+    H.div (HA.class "row -tight" :: attrs) children
 
 
-spacingDefault : Attribute Msg
-spacingDefault =
-    spacing <| 2 * rem
-
-
-fontMonospace : Attribute Msg
-fontMonospace =
-    Font.family [ Font.monospace ]
-
-
-paddingDefault : Attribute Msg
-paddingDefault =
-    padding <| 2 * rem
+externalLink : List (Attribute msg) -> List (Html msg) -> Html msg
+externalLink attrs children =
+    H.a
+        ([ HA.target "blank_"
+         , HA.rel "noopener noreferrer"
+         , HA.class "link"
+         ]
+            ++ attrs
+        )
+        children
 
 
 view : Model -> Html Msg
 view model =
-    layout
-        [ Font.size rem
-        , fontMonospace
+    column [ HA.class "body" ]
+        [ appView model
+        , footerView
         ]
-    <|
-        column
-            [ spacingDefault
-            , paddingDefault
-            , width (fill |> maximum (100 * rem))
-            , height fill
-            , centerX
-            ]
-            [ column
-                [ width fill
-                , height fill
-                ]
-                [ appView model ]
-            , footerView
-            ]
 
 
-appView : Model -> Element Msg
+appView : Model -> Html Msg
 appView model =
     let
         themeColors =
             getThemeColors model
     in
     column
-        [ spacingDefault
-        , width fill
-        , Region.mainContent
-        ]
-        [ row [ spacingDefault, width fill ]
+        [ HA.style "flex-grow" "1" ]
+        [ row [ HA.class "-equal", HA.style "align-items" "stretch" ]
             [ inputView (model.inputErrors == []) model.inputText
             , outputView themeColors
             ]
@@ -103,54 +78,45 @@ appView model =
         ]
 
 
-inputErrorsView : List String -> Element Msg
+inputErrorsView : List String -> Html Msg
 inputErrorsView errors =
     let
         errorView e =
-            paragraph
-                [ Font.color errColor ]
-                [ text e ]
+            H.p
+                [ HA.class "errorMsg" ]
+                [ H.text e ]
     in
-    column [ width fill ]
+    column []
         (List.map errorView errors)
 
 
-themeColorsView : List ThemeColor -> Element Msg
+themeColorsView : List ThemeColor -> Html Msg
 themeColorsView themeColors =
     if themeColors == [] then
-        text "No colors found."
+        H.text "No colors found."
 
     else
-        column [ spacingSmall, width fill ]
+        columnSmall []
             [ themeColorsHeaderView
-            , column [ width fill ]
+            , columnTight []
                 (themeAverageView themeColors
                     :: List.map themeColorView themeColors
                 )
             ]
 
 
-nameColWidth : number
-nameColWidth =
-    7 * rem
-
-
-themeColorsHeaderView : Element Msg
+themeColorsHeaderView : Html Msg
 themeColorsHeaderView =
-    let
-        previewColWidth =
-            4 * colorSwatchWidth
-    in
-    row [ spacingDefault, width fill, Font.center ]
-        [ el [ width <| px nameColWidth ] (text "Color")
-        , el [ width fill ] (text "Hue")
-        , el [ width fill ] (text "Saturation")
-        , el [ width fill ] (text "Lightness")
-        , el [ width <| px previewColWidth ] (text "Preview")
+    row [ HA.style "text-align" "center" ]
+        [ H.div [ HA.class "nameCol" ] [ H.text "Color" ]
+        , H.div [ HA.class "equalFill" ] [ H.text "Hue" ]
+        , H.div [ HA.class "equalFill" ] [ H.text "Saturation" ]
+        , H.div [ HA.class "equalFill" ] [ H.text "Lightness" ]
+        , H.div [ HA.class "previewCol" ] [ H.text "Preview" ]
         ]
 
 
-themeAverageView : List ThemeColor -> Element Msg
+themeAverageView : List ThemeColor -> Html Msg
 themeAverageView themeColors =
     let
         numColors =
@@ -174,35 +140,35 @@ themeAverageView themeColors =
             [ ( Hue, avgH ), ( Saturation, avgS ), ( Lightness, avgL ) ]
                 |> List.map
                     (\( hsl, avg ) ->
-                        row [ spacingSmall, width fill ]
+                        rowSmall [ HA.class "equalFill" ]
                             [ themeColorComponentRangeInput
                                 { hsl = hsl
                                 , onChange = GotAverageRangeInput hsl avg
                                 , value = avg
                                 }
-                            , el
-                                [ width <| px componentInputWidth
+                            , H.input
+                                [ HA.class "componentInput"
+                                , HA.readonly True
+                                , HA.value <| Round.round 2 avg
                                 ]
-                                (text <| Round.round 2 avg)
+                                []
                             ]
                     )
 
         children =
-            el [ width <| px nameColWidth ]
-                (text "Average")
+            H.div [ HA.class "nameCol" ]
+                [ H.text "Average" ]
                 :: rangeInputs
-                ++ [ row [ width <| px (colorSwatchWidth * 4) ] []
+                ++ [ row
+                        [ HA.class "previewCol"
+                        ]
+                        []
                    ]
     in
-    row
-        [ spacingDefault
-        , width fill
-        , height <| px colorSwatchHeight
-        ]
-        children
+    row [] children
 
 
-themeColorView : ThemeColor -> Element Msg
+themeColorView : ThemeColor -> Html Msg
 themeColorView item =
     let
         rangeInputs =
@@ -213,7 +179,7 @@ themeColorView item =
                             component =
                                 getThemeColorComponent hsl item.components
                         in
-                        row [ spacingSmall, width fill ]
+                        rowSmall [ HA.class "equalFill" ]
                             [ themeColorComponentRangeInput
                                 { hsl = hsl
                                 , onChange = GotHsluvRangeInput item.name hsl
@@ -229,59 +195,38 @@ themeColorView item =
                     )
 
         children =
-            el [ width <| px nameColWidth ]
-                (text item.name)
+            H.div [ HA.class "nameCol" ]
+                [ H.text item.name ]
                 :: rangeInputs
-                ++ [ row []
-                        [ row []
-                            [ colorSwatch item.originalColor
-                            , colorSwatch item.newColor
-                            ]
-                        , row []
-                            [ textSwatch item.originalColor
-                            , textSwatch item.newColor
-                            ]
+                ++ [ rowTight []
+                        [ colorSwatch item.originalColor
+                        , colorSwatch item.newColor
+                        , textSwatch item.originalColor
+                        , textSwatch item.newColor
                         ]
                    ]
     in
-    row [ spacingDefault, width fill ] children
+    row [] children
 
 
-colorSwatchWidth : number
-colorSwatchWidth =
-    4 * rem
-
-
-colorSwatchHeight : number
-colorSwatchHeight =
-    3 * rem
-
-
-colorSwatch : Color -> Element Msg
+colorSwatch : Color -> Html Msg
 colorSwatch color =
-    el
-        [ Background.color color
-        , width <| px colorSwatchWidth
-        , height <| px colorSwatchHeight
+    H.div
+        [ HA.style "background-color" <| Color.toCssString color
+        , HA.class "previewSwatch"
         ]
-        (text "")
+        [ H.text "" ]
 
 
-textSwatch : Color -> Element Msg
+textSwatch : Color -> Html Msg
 textSwatch color =
-    el
-        [ Font.color color
-        , width <| px colorSwatchWidth
-        , height <| px colorSwatchHeight
-        , centerX
-        , centerY
+    H.div
+        [ HA.style "color" <| Color.toCssString color
+        , HA.class "previewSwatch"
+        , HA.class "gridCenter"
         ]
-        (el [ centerX, centerY ] (text "Aa"))
-
-
-componentInputWidth : number
-componentInputWidth =
-    5 * rem
+        [ H.div [] [ H.text "Aa" ]
+        ]
 
 
 themeColorComponentInput :
@@ -290,11 +235,14 @@ themeColorComponentInput :
     , value : String
     , valid : Bool
     }
-    -> Element Msg
+    -> Html Msg
 themeColorComponentInput { label, onChange, value, valid } =
     let
         baseAttrs =
-            [ width <| px componentInputWidth
+            [ HA.class "componentInput"
+            , HA.type_ "text"
+            , HE.onInput onChange
+            , HA.value value
             ]
 
         attrs =
@@ -302,20 +250,16 @@ themeColorComponentInput { label, onChange, value, valid } =
                 baseAttrs
 
             else
-                Border.color errColor :: baseAttrs
+                HA.class "inputWithError" :: baseAttrs
     in
-    Input.text
+    H.input
         attrs
-        { label = Input.labelHidden label
-        , onChange = onChange
-        , text = value
-        , placeholder = Nothing
-        }
+        []
 
 
 themeColorComponentRangeInput :
     { hsl : HSL, onChange : Float -> Msg, value : Float }
-    -> Element Msg
+    -> Html Msg
 themeColorComponentRangeInput { hsl, onChange, value } =
     let
         sliderMax =
@@ -326,51 +270,42 @@ themeColorComponentRangeInput { hsl, onChange, value } =
                 _ ->
                     100
     in
-    Input.slider
-        [ height <| px rem
-        , Element.behindContent
-            (Element.el
-                [ Element.width Element.fill
-                , Element.height (Element.px 2)
-                , Element.centerY
-                , Background.color sliderRailColor
-                , Border.rounded 2
-                ]
-                Element.none
-            )
+    H.input
+        [ HA.type_ "range"
+        , HE.onInput <| String.toFloat >> Maybe.withDefault value >> onChange
+        , HA.min "0"
+        , HA.max <| String.fromInt sliderMax
+        , HA.step "0.01"
+        , HA.value <| String.fromFloat value
         ]
-        { onChange = onChange
-        , label = Input.labelHidden <| hslToString hsl
-        , min = 0
-        , max = sliderMax
-        , step = Just 0.01
-        , value = value
-        , thumb =
-            Input.defaultThumb
-        }
+        []
 
 
-inputView : Bool -> String -> Element Msg
+inputView : Bool -> String -> Html Msg
 inputView valid value =
     let
+        baseAttrs =
+            [ HE.onInput GotInputText
+            , HA.spellcheck False
+            , HA.rows <| List.length <| String.lines <| value
+            ]
+
         attrs =
             if valid then
-                []
+                baseAttrs
 
             else
-                [ Border.color errColor ]
+                HA.class "inputWithError" :: baseAttrs
     in
-    Input.multiline
-        (width fill :: attrs)
-        { onChange = GotInputText
-        , text = value
-        , placeholder = Nothing
-        , label = Input.labelAbove [] (text "Input")
-        , spellcheck = False
-        }
+    columnTight []
+        [ H.label [] [ H.text "Input" ]
+        , H.textarea
+            attrs
+            [ H.text value ]
+        ]
 
 
-outputView : List ThemeColor -> Element Msg
+outputView : List ThemeColor -> Html Msg
 outputView colors =
     let
         outputText =
@@ -384,30 +319,21 @@ outputView colors =
                 ++ rgbToString item.newColor
                 ++ ";"
     in
-    Input.multiline
-        [ width fill
-        , height fill
-        , htmlAttribute <| HA.attribute "readonly" ""
-        , Background.color outputBackgroundColor
+    columnTight []
+        [ H.label [] [ H.text "Output" ]
+        , H.textarea
+            [ HA.readonly True
+            , HA.rows <| List.length <| String.lines <| outputText
+            ]
+            [ H.text outputText ]
         ]
-        { onChange = always Noop
-        , text = outputText
-        , placeholder = Nothing
-        , label = Input.labelAbove [] (text "Output")
-        , spellcheck = False
-        }
 
 
-footerView : Element Msg
+footerView : Html Msg
 footerView =
-    row
-        [ spacingDefault
-        , width fill
-        , Region.footer
-        ]
-        [ newTabLink
-            [ Font.color linkColor, Font.underline ]
-            { url = "https://github.com/megapctr/color-tuner"
-            , label = text "Source"
-            }
+    row []
+        [ externalLink
+            [ HA.href "https://github.com/megapctr/color-tuner"
+            ]
+            [ H.text "Source" ]
         ]

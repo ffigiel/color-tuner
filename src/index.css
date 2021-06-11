@@ -1,0 +1,122 @@
+/* RESET */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  height: 100%;
+  resize: vertical;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* VARS */
+:root {
+  --colorSwatchWidth: 4rem;
+  --colorSwatchHeight: 3rem;
+  --errColor: rgb(220, 0, 0);
+  --linkColor: rgb(0, 0, 220);
+}
+
+/* CONTENT */
+
+:root {
+  font-size: 1rem;
+  line-height: 1.33em;
+  font-family: monospace;
+}
+
+input,
+textarea {
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+/* UI */
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+.column > :not(:last-child) {
+  margin-bottom: 2rem;
+}
+.column.-small > :not(:last-child) {
+  margin-bottom: 1rem;
+}
+.column.-tight > :not(:last-child) {
+  margin-bottom: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+.row.-equal > * {
+  flex-grow: 1;
+}
+.row > :not(:last-child) {
+  margin-right: 2rem;
+}
+.row.-small > :not(:last-child) {
+  margin-right: 1rem;
+}
+.row.-tight > :not(:last-child) {
+  margin-right: 0;
+}
+
+.link {
+  color: var(--linkColor);
+  text-decoration: underline;
+}
+
+/* APP */
+
+.body {
+  padding: 2rem;
+  margin: 0 auto;
+  width: 100rem;
+  max-width: 100%;
+}
+
+.nameCol {
+    width: 7rem;
+}
+.previewCol {
+  width: calc(4 * var(--colorSwatchWidth));
+  height: var(--colorSwatchHeight);
+}
+
+.errorMsg {
+  color: var(--errColor);
+}
+
+.inputWithError {
+  border-color: var(--errColor);
+}
+
+.equalFill {
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.previewSwatch {
+  width: var(--colorSwatchWidth);
+  height: var(--colorSwatchHeight);
+}
+
+.gridCenter {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+}
+
+.componentInput {
+  width: 5rem;
+}

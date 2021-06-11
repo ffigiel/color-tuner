@@ -14,8 +14,8 @@ module Types exposing
     , setThemeColorComponent
     )
 
+import Color exposing (Color)
 import Dict exposing (Dict)
-import Element exposing (Color)
 import HSLuv
 import Hex
 import Round
@@ -26,8 +26,7 @@ import Round
 
 
 type Msg
-    = Noop
-    | GotInputText String
+    = GotInputText String
     | GotHsluvTextInput String HSL String
     | GotHsluvRangeInput String HSL Float
     | GotAverageRangeInput HSL Float Float
@@ -204,7 +203,7 @@ colorFromComponents c =
         , alpha = 1
         }
         |> HSLuv.toRgba
-        |> Element.fromRgb
+        |> Color.fromRgba
 
 
 
@@ -215,7 +214,7 @@ rgbToString : Color -> String
 rgbToString color =
     let
         components =
-            Element.toRgb color
+            Color.toRgba color
 
         componentToString : Float -> String
         componentToString =

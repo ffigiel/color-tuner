@@ -27,9 +27,6 @@ main =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Noop ->
-            model
-
         GotInputText value ->
             case Parsers.parseCssInput value of
                 Ok themeColors ->
