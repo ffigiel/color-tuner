@@ -53,9 +53,15 @@ externalLink attrs children =
 view : Model -> Html Msg
 view model =
     column [ HA.class "body" ]
-        [ appView model
+        [ headerView
+        , appView model
         , footerView
         ]
+
+
+headerView : Html Msg
+headerView =
+    H.h1 [ HA.class "appHeader" ] [ H.text "🎨 Color Tuner" ]
 
 
 appView : Model -> Html Msg
@@ -156,7 +162,7 @@ themeAverageView themeColors =
                     )
 
         children =
-            H.div [ HA.class "nameCol" ]
+            H.div [ HA.class "nameCol", HA.style "text-align" "center" ]
                 [ H.text "Average" ]
                 :: rangeInputs
                 ++ [ row
@@ -196,7 +202,7 @@ themeColorView item =
 
         children =
             H.div [ HA.class "nameCol" ]
-                [ H.text item.name ]
+                [ H.code [] [ H.text item.name ] ]
                 :: rangeInputs
                 ++ [ rowTight []
                         [ colorSwatch item.originalColor

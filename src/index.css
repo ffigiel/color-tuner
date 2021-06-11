@@ -26,6 +26,10 @@ textarea {
 :root {
   font-size: 1rem;
   line-height: 1.33em;
+  font-family: Balsamiq Sans, monospace;
+}
+
+input, textarea, code {
   font-family: monospace;
 }
 
@@ -34,7 +38,6 @@ textarea {
   padding: 0.5rem 0.75rem;
   width: 100%;
   font-size: inherit;
-  font-family: inherit;
   line-height: inherit;
 }
 
@@ -77,6 +80,12 @@ textarea {
 }
 
 /* APP */
+
+.appHeader {
+  text-align: center;
+  font-weight: bold;
+  font-size: 3rem;
+}
 
 .body {
   padding: 2rem;
