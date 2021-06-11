@@ -82,6 +82,7 @@ cssColorParser =
     Parser.oneOf
         [ rgbColorParser
         , hslColorParser
+        , hsluvColorParser
         , hexColorParser
         ]
 
@@ -114,6 +115,33 @@ hslColorParser =
     in
     Parser.succeed hslToColor
         |. Parser.symbol "hsl("
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.symbol "%"
+        |. Parser.spaces
+        |. Parser.symbol ","
+        |. Parser.spaces
+        |= Parser.float
+        |. Parser.symbol "%"
+        |. Parser.spaces
+        |. Parser.symbol ")"
+
+
+hsluvColorParser : Parser Color
+hsluvColorParser =
+    let
+        hslToColor h s l =
+            ( h, s, l )
+                |> HSLuv.hsluvToRgb
+                |> (\( r, g, b ) -> { red = r, green = g, blue = b, alpha = 1 })
+                |> Element.fromRgb
+    in
+    Parser.succeed hslToColor
+        |. Parser.symbol "hsluv("
         |. Parser.spaces
         |= Parser.float
         |. Parser.spaces
