@@ -61,7 +61,15 @@ view model =
 
 headerView : Html Msg
 headerView =
-    H.h1 [ HA.class "appHeader" ] [ H.text "🎨 Color Tuner" ]
+    column [ HA.class "appHeader" ]
+        [ H.h1 [ HA.class "appHeader_title" ] [ H.text "🎨 Color Tuner" ]
+        , H.p []
+            [ H.text "Fine-tune your palette with "
+            , externalLink
+                [ HA.href "https://www.hsluv.org/" ]
+                [ H.text "HSLuv" ]
+            ]
+        ]
 
 
 appView : Model -> Html Msg

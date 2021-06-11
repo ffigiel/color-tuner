@@ -4,13 +4,17 @@ html, body {
   padding: 0;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+p, h1 {
+  margin: 0;
+}
+
 textarea {
   height: 100%;
   resize: vertical;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 /* VARS */
@@ -25,7 +29,7 @@ textarea {
 
 :root {
   font-size: 1rem;
-  line-height: 1.33em;
+  line-height: 1.4;
   font-family: Balsamiq Sans, monospace;
 }
 
@@ -81,17 +85,20 @@ textarea {
 
 /* APP */
 
-.appHeader {
-  text-align: center;
-  font-weight: bold;
-  font-size: 3rem;
-}
-
 .body {
   padding: 2rem;
   margin: 0 auto;
   width: 100rem;
   max-width: 100%;
+}
+
+.appHeader {
+  text-align: center;
+  font-size: 2rem;
+}
+.appHeader_title {
+  font-size: 6rem;
+  font-weight: bold;
 }
 
 .nameCol {
