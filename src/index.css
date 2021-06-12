@@ -14,7 +14,7 @@ p, h1 {
 
 textarea {
   height: 100%;
-  resize: vertical;
+  resize: none;
 }
 
 /* VARS */
@@ -23,6 +23,9 @@ textarea {
   --colorSwatchHeight: 3rem;
   --errColor: rgb(220, 0, 0);
   --linkColor: rgb(0, 0, 220);
+  --inputShadow: rgb(240, 240, 240);
+  --inputBg: rgb(246, 246, 246);
+  --inputBgReadonly: rgb(250, 250, 250);
 }
 
 /* CONTENT */
@@ -34,15 +37,22 @@ textarea {
 }
 
 input, textarea, code {
-  font-family: monospace;
-}
-
-input,
-textarea {
+  border: 0;
+  box-shadow: 1px 3px 0 var(--inputShadow) inset;
+  border-radius: 0.9em 1em;
   padding: 0.5rem 0.75rem;
   width: 100%;
+  font-family: monospace;
   font-size: inherit;
   line-height: inherit;
+  background-color: var(--inputBg);
+}
+
+input:read-only,
+textarea:read-only,
+code {
+  background-color: var(--inputBgReadonly);
+  box-shadow: none;
 }
 
 /* UI */
