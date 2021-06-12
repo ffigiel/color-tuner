@@ -24,9 +24,8 @@ textarea {
   --errColor: #a74236;
   --linkColor: #3f74d3;
   --inputOutline: #cccccc;
-  --inputShadow: #efefef;
-  --inputBg: #f3f3f3;
-  --inputBgReadonly: #f7f7f7;
+  --inputBg: #f2f2f2;
+  --inputBgReadonly: #f8f8f8;
 }
 
 /* CONTENT */
@@ -38,8 +37,7 @@ textarea {
 }
 
 input, textarea, code {
-  border: 0;
-  box-shadow: 1px 3px 0 var(--inputShadow) inset;
+  border: 2px solid transparent;
   border-radius: 0.75em 1em;
   padding: 0.5rem 0.75rem;
   width: 100%;
@@ -50,13 +48,12 @@ input, textarea, code {
 }
 
 input[type="range"] {
-  box-shadow: none;
   background-color: none;
 }
 
 input:focus, textarea:focus {
-  outline: 2px solid var(--inputOutline);
-  box-shadow: none;
+  outline: none;
+  border-color: var(--inputOutline);
   animation: 1500ms blob;
   animation-iteration-count: infinite;
   animation-timing-function: steps(3, end);
@@ -74,11 +71,16 @@ input:focus, textarea:focus {
   }
 }
 
+input:focus:read-only,
+textarea:focus:read-only,
+code {
+  animation: none;
+}
+
 input:read-only,
 textarea:read-only,
 code {
   background-color: var(--inputBgReadonly);
-  box-shadow: none;
 }
 
 /* UI */
@@ -139,7 +141,7 @@ code {
 }
 
 .nameCol {
-    width: 7rem;
+    width: 8rem;
 }
 .previewCol {
   width: calc(4 * var(--colorSwatchWidth));
