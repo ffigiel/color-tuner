@@ -61,10 +61,17 @@ view model =
 
 headerView : Html Msg
 headerView =
-    column [ HA.class "appHeader" ]
-        [ H.h1 [ HA.class "appHeader_title" ] [ H.text "🎨 Color Tuner" ]
+    columnTight [ HA.class "appHeader" ]
+        [ rowTight [ HA.class "appHeader_title", HA.id "title" ]
+            ("Color\u{00A0}Tuner"
+                |> String.toList
+                |> List.map
+                    (\c ->
+                        H.span [ HA.style "position" "relative" ] [ H.text (String.fromChar c) ]
+                    )
+            )
         , H.p []
-            [ H.text "Fine-tune your palette with "
+            [ H.text "🎨 Fine-tune your palette with "
             , externalLink
                 [ HA.href "https://www.hsluv.org/" ]
                 [ H.text "HSLuv" ]

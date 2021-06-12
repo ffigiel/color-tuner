@@ -93,12 +93,13 @@ textarea {
 }
 
 .appHeader {
-  text-align: center;
   font-size: 2rem;
+  text-align: center;
 }
 .appHeader_title {
-  font-size: 6rem;
+  font-size: 8rem;
   font-weight: bold;
+  justify-content: center;
 }
 
 .nameCol {
