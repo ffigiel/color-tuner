@@ -161,7 +161,8 @@ themeColorsHeaderView zoom =
                         [ H.text "Preview " ]
                    ]
     in
-    row [] children
+    row [ HA.style "text-align" "center" ]
+        children
 
 
 themeAverageView : List ThemeColor -> Maybe HSL -> Html Msg
