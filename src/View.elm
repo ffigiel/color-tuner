@@ -137,14 +137,16 @@ themeColorsHeaderView zoom =
                 isHidden =
                     zoom /= Nothing && zoom /= Just comp
             in
-            H.div
+            rowSmall
                 [ HA.classList
                     [ ( "equalFill", True )
                     , ( "header_hidden", isHidden )
                     ]
+                , HA.style "justify-content" "center"
                 ]
-                [ H.text <| hslToString comp
-                , H.text " "
+                [ H.span []
+                    [ H.text <| hslToString comp
+                    ]
                 , H.button
                     [ HA.type_ "button"
                     , HE.onClick (ToggleZoom comp)
@@ -159,8 +161,7 @@ themeColorsHeaderView zoom =
                         [ H.text "Preview " ]
                    ]
     in
-    row [ HA.style "text-align" "center" ]
-        children
+    row [] children
 
 
 themeAverageView : List ThemeColor -> Maybe HSL -> Html Msg

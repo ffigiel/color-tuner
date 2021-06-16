@@ -36,7 +36,7 @@ textarea {
   font-family: Balsamiq Sans, cursive;
 }
 
-input, textarea, code {
+button, input, textarea, code {
   border: 2px solid transparent;
   border-radius: 0.75em 1em;
   padding: 0.5rem 0.75rem;
@@ -51,7 +51,7 @@ input[type="range"] {
   background-color: none;
 }
 
-input:focus, textarea:focus {
+button, input:focus, textarea:focus {
   outline: none;
   border-color: var(--inputOutline);
   animation: 1500ms blob;
@@ -69,6 +69,13 @@ input:focus, textarea:focus {
   100% {
     border-radius: 0.75em 1em;
   }
+}
+
+button {
+  font-family: inherit;
+  width: auto;
+  padding: 0.25rem 0.625rem;
+  border-color: transparent;
 }
 
 input:focus:read-only,
