@@ -117,3 +117,14 @@ update msg model =
                 | themeColorsByName =
                     Dict.map (always updateItem) model.themeColorsByName
             }
+
+        ToggleZoom component ->
+            let
+                zoom =
+                    if model.zoom == Just component then
+                        Nothing
+
+                    else
+                        Just component
+            in
+            { model | zoom = zoom }

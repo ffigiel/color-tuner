@@ -95,7 +95,7 @@ appView model =
             inputErrorsView model.inputErrors
 
           else
-            themeColorsView themeColors
+            themeColorsView themeColors model.zoom
         ]
 
 
@@ -111,34 +111,59 @@ inputErrorsView errors =
         (List.map errorView errors)
 
 
-themeColorsView : List ThemeColor -> Html Msg
-themeColorsView themeColors =
+themeColorsView : List ThemeColor -> Maybe HSL -> Html Msg
+themeColorsView themeColors zoom =
     if themeColors == [] then
         H.text "No colors found."
 
     else
         columnSmall []
-            [ themeColorsHeaderView
+            [ themeColorsHeaderView zoom
             , columnTight []
-                (themeAverageView themeColors
-                    :: List.map themeColorView themeColors
+                (themeAverageView themeColors zoom
+                    :: List.map (themeColorView zoom) themeColors
                 )
             ]
 
 
-themeColorsHeaderView : Html Msg
-themeColorsHeaderView =
+themeColorsHeaderView : Maybe HSL -> Html Msg
+themeColorsHeaderView zoom =
+    let
+        components =
+            hslComponents
+                |> List.filterMap
+                    (\comp ->
+                        if zoom == Nothing || zoom == Just comp then
+                            Just <| compView comp
+
+                        else
+                            Nothing
+                    )
+
+        compView comp =
+            H.div [ HA.class "equalFill" ]
+                [ H.text <| hslToString comp
+                , H.text " "
+                , H.button
+                    [ HA.type_ "button"
+                    , HE.onClick (ToggleZoom comp)
+                    ]
+                    [ H.text "🔍" ]
+                ]
+
+        children =
+            H.div [ HA.class "nameCol" ] [ H.text "Color" ]
+                :: components
+                ++ [ H.div [ HA.class "previewCol" ]
+                        [ H.text "Preview " ]
+                   ]
+    in
     row [ HA.style "text-align" "center" ]
-        [ H.div [ HA.class "nameCol" ] [ H.text "Color" ]
-        , H.div [ HA.class "equalFill" ] [ H.text "Hue" ]
-        , H.div [ HA.class "equalFill" ] [ H.text "Saturation" ]
-        , H.div [ HA.class "equalFill" ] [ H.text "Lightness" ]
-        , H.div [ HA.class "previewCol" ] [ H.text "Preview" ]
-        ]
+        children
 
 
-themeAverageView : List ThemeColor -> Html Msg
-themeAverageView themeColors =
+themeAverageView : List ThemeColor -> Maybe HSL -> Html Msg
+themeAverageView themeColors zoom =
     let
         numColors =
             toFloat <| List.length themeColors
@@ -159,22 +184,29 @@ themeAverageView themeColors =
 
         rangeInputs =
             [ ( Hue, avgH ), ( Saturation, avgS ), ( Lightness, avgL ) ]
-                |> List.map
+                |> List.filterMap
                     (\( hsl, avg ) ->
-                        rowSmall [ HA.class "equalFill" ]
-                            [ themeColorComponentRangeInput
-                                { hsl = hsl
-                                , onChange = GotAverageRangeInput hsl avg
-                                , value = avg
-                                }
-                            , H.input
-                                [ HA.class "componentInput"
-                                , HA.readonly True
-                                , HA.value <| Round.round 2 avg
-                                ]
-                                []
-                            ]
+                        if zoom == Nothing || zoom == Just hsl then
+                            Just <| rangeInputView hsl avg
+
+                        else
+                            Nothing
                     )
+
+        rangeInputView hsl avg =
+            rowSmall [ HA.class "equalFill" ]
+                [ themeColorComponentRangeInput
+                    { hsl = hsl
+                    , onChange = GotAverageRangeInput hsl avg
+                    , value = avg
+                    }
+                , H.input
+                    [ HA.class "componentInput"
+                    , HA.readonly True
+                    , HA.value <| Round.round 2 avg
+                    ]
+                    []
+                ]
 
         children =
             H.div [ HA.class "nameCol", HA.style "text-align" "center" ]
@@ -189,31 +221,37 @@ themeAverageView themeColors =
     row [] children
 
 
-themeColorView : ThemeColor -> Html Msg
-themeColorView item =
+themeColorView : Maybe HSL -> ThemeColor -> Html Msg
+themeColorView zoom item =
     let
         rangeInputs =
-            [ Hue, Saturation, Lightness ]
-                |> List.map
+            hslComponents
+                |> List.filterMap
                     (\hsl ->
-                        let
-                            component =
-                                getThemeColorComponent hsl item.components
-                        in
-                        rowSmall [ HA.class "equalFill" ]
-                            [ themeColorComponentRangeInput
-                                { hsl = hsl
-                                , onChange = GotHsluvRangeInput item.name hsl
-                                , value = component.normalizedValue
-                                }
-                            , themeColorComponentInput
-                                { label = hslToString hsl
-                                , onChange = GotHsluvTextInput item.name hsl
-                                , value = component.input
-                                , valid = component.valid
-                                }
-                            ]
+                        if zoom == Nothing || zoom == Just hsl then
+                            Just <| rangeInputView hsl
+
+                        else
+                            Nothing
                     )
+
+        rangeInputView hsl =
+            let
+                component =
+                    getThemeColorComponent hsl item.components
+            in
+            rowSmall [ HA.class "equalFill" ]
+                [ themeColorComponentRangeInput
+                    { hsl = hsl
+                    , onChange = GotHsluvRangeInput item.name hsl
+                    , value = component.normalizedValue
+                    }
+                , themeColorComponentInput
+                    { onChange = GotHsluvTextInput item.name hsl
+                    , value = component.input
+                    , valid = component.valid
+                    }
+                ]
 
         children =
             H.div [ HA.class "nameCol" ]
@@ -251,13 +289,12 @@ textSwatch color =
 
 
 themeColorComponentInput :
-    { label : String
-    , onChange : String -> Msg
+    { onChange : String -> Msg
     , value : String
     , valid : Bool
     }
     -> Html Msg
-themeColorComponentInput { label, onChange, value, valid } =
+themeColorComponentInput { onChange, value, valid } =
     let
         baseAttrs =
             [ HA.class "componentInput"

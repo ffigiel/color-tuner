@@ -7,6 +7,7 @@ module Types exposing
     , componentFromValue
     , getThemeColorComponent
     , getThemeColors
+    , hslComponents
     , hslToString
     , init
     , rgbToString
@@ -30,6 +31,7 @@ type Msg
     | GotHsluvTextInput String HSL String
     | GotHsluvRangeInput String HSL Float
     | GotAverageRangeInput HSL Float Float
+    | ToggleZoom HSL
 
 
 type alias Model =
@@ -37,6 +39,7 @@ type alias Model =
     , inputErrors : List String
     , themeColorNames : List String
     , themeColorsByName : Dict String ThemeColor
+    , zoom : Maybe HSL
     }
 
 
@@ -54,15 +57,13 @@ init =
 --green-700: #047857;
 --green-800: #065F46;
 --green-900: #064E3B;"""
-
-        model =
-            { inputText = inputText
-            , inputErrors = []
-            , themeColorNames = []
-            , themeColorsByName = Dict.empty
-            }
     in
-    model
+    { inputText = inputText
+    , inputErrors = []
+    , themeColorNames = []
+    , themeColorsByName = Dict.empty
+    , zoom = Nothing
+    }
 
 
 getThemeColors : Model -> List ThemeColor
@@ -104,17 +105,22 @@ type HSL
     | Lightness
 
 
+hslComponents : List HSL
+hslComponents =
+    [ Hue, Saturation, Lightness ]
+
+
 hslToString : HSL -> String
 hslToString c =
     case c of
         Hue ->
-            "hue"
+            "Hue"
 
         Saturation ->
-            "saturation"
+            "Saturation"
 
         Lightness ->
-            "lightness"
+            "Lightness"
 
 
 componentFromValue : HSL -> Float -> ThemeColorComponent
