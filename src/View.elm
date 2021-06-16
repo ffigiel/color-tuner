@@ -130,18 +130,19 @@ themeColorsHeaderView : Maybe HSL -> Html Msg
 themeColorsHeaderView zoom =
     let
         components =
-            hslComponents
-                |> List.filterMap
-                    (\comp ->
-                        if zoom == Nothing || zoom == Just comp then
-                            Just <| compView comp
-
-                        else
-                            Nothing
-                    )
+            List.map compView hslComponents
 
         compView comp =
-            H.div [ HA.class "equalFill" ]
+            let
+                isHidden =
+                    zoom /= Nothing && zoom /= Just comp
+            in
+            H.div
+                [ HA.classList
+                    [ ( "equalFill", True )
+                    , ( "header_hidden", isHidden )
+                    ]
+                ]
                 [ H.text <| hslToString comp
                 , H.text " "
                 , H.button

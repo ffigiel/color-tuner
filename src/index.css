@@ -175,3 +175,7 @@ code {
 .componentInput {
   width: 5rem;
 }
+
+.header_hidden {
+  opacity: 0.4;
+}
