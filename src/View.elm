@@ -359,7 +359,7 @@ inputView valid value =
                 HA.class "inputWithError" :: baseAttrs
     in
     columnTight []
-        [ H.label [] [ H.text "Input" ]
+        [ H.label [] [ H.text "Paste your color variables here" ]
         , H.textarea
             attrs
             [ H.text value ]
