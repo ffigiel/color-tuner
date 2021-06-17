@@ -114,7 +114,9 @@ inputErrorsView errors =
 themeColorsView : List ThemeColor -> Maybe HSL -> Html Msg
 themeColorsView themeColors zoom =
     if themeColors == [] then
-        H.text "No colors found."
+        H.p
+            [ HA.class "errorMsg" ]
+            [ H.text "No colors found." ]
 
     else
         columnSmall []
