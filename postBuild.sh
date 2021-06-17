@@ -8,12 +8,12 @@ set -e
 
 cd dist
 OLDNAME="index.css"
-NEWNAME="$(md5sum ${OLDNAME} | cut -c 1-6).css"
+NEWNAME="index.$(md5sum ${OLDNAME} | cut -c 1-6).css"
 mv ${OLDNAME} ${NEWNAME}
 sed -i "s|$OLDNAME|color-tuner/$NEWNAME|" index.html
 
 OLDNAME="index.js"
-NEWNAME="$(md5sum ${OLDNAME} | cut -c 1-6).js"
+NEWNAME="index.$(md5sum ${OLDNAME} | cut -c 1-6).js"
 mv ${OLDNAME} ${NEWNAME}
 sed -i "s|$OLDNAME|color-tuner/$NEWNAME|" index.html
 cd ..
