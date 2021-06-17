@@ -4,7 +4,7 @@ VERSION_ID := $(shell git describe --always --long --tags --dirty)
 .DEFAULT_GOAL:= dist
 
 clean:
-	rm -rf .cache dist
+	rm -rf dist dist.old
 
 deploy-pages: dist
 	git checkout dd674c0
@@ -17,13 +17,11 @@ deploy-pages: dist
 	git checkout main
 
 dist: clean
-	npx parcel build \
-		--no-source-maps \
-		--public-url /color-tuner/ \
-		src/index.html
+	npx snowpack build
+	./postBuild.sh
 
 dev:
-	npx parcel src/index.html
+	npx snowpack dev
 
 lint:
 	npx elm-analyse

@@ -1,8 +1,9 @@
 {
   "dependencies": {
-    "@parcel/transformer-elm": "^2.0.0-beta.2",
+    "@snowpack/plugin-webpack": "^2.3.1",
     "elm": "*",
     "elm-analyse": "^0.16.5",
-    "parcel": "*"
+    "snowpack": "^3.5.9",
+    "snowpack-plugin-elm": "^0.4.3"
   }
 }
