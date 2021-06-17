@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@snowpack/plugin-webpack": "^2.3.1",
     "elm": "*",
     "elm-analyse": "^0.16.5",
     "snowpack": "^3.5.9",

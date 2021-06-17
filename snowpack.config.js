@@ -20,8 +20,14 @@ module.exports = {
   ],
   plugins: [
     'snowpack-plugin-elm',
-    '@snowpack/plugin-webpack',
   ],
+  optimize: {
+    bundle: true,
+    sourcemap: false,
+    splitting: false,
+    treeshake: true,
+    minify: true,
+  },
   packageOptions: {
   },
   devOptions: {
