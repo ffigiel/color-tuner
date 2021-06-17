@@ -149,6 +149,7 @@ themeColorsHeaderView zoom =
                     ]
                 , H.button
                     [ HA.type_ "button"
+                    , HA.classList [ ( "-active", zoom == Just comp ) ]
                     , HE.onClick (ToggleZoom comp)
                     ]
                     [ H.text "🔍" ]
