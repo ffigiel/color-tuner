@@ -1,7 +1,9 @@
 /* I will clean up these styles one day... */
 
 /* RESET */
-html, body {
+
+html,
+body {
   margin: 0;
   padding: 0;
 }
@@ -10,7 +12,8 @@ html, body {
   box-sizing: border-box;
 }
 
-p, h1 {
+p,
+h1 {
   margin: 0;
 }
 
@@ -20,12 +23,13 @@ textarea {
 }
 
 /* VARS */
+
 :root {
   --colorSwatchWidth: 4rem;
   --colorSwatchHeight: 3rem;
   --errColor: #a74236;
   --linkColor: #3f74d3;
-  --inputOutline: #cccccc;
+  --inputOutline: #ccc;
   --inputBg: #f2f2f2;
   --inputBgReadonly: #f8f8f8;
 }
@@ -38,7 +42,10 @@ textarea {
   font-family: Balsamiq Sans, cursive;
 }
 
-button, input, textarea, code {
+button,
+input,
+textarea,
+code {
   border: 2px solid transparent;
   border-radius: 0.75em 1em;
   padding: 0.5rem 0.75rem;
@@ -59,9 +66,14 @@ button.-active {
 
 input[type="range"] {
   background-color: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
 
-button, input:focus, textarea:focus {
+button,
+input:focus,
+textarea:focus {
   outline: none;
   border-color: var(--inputOutline);
   animation: 1500ms blob;
@@ -106,12 +118,15 @@ code {
   display: flex;
   flex-direction: column;
 }
+
 .column > :not(:last-child) {
   margin-bottom: 2rem;
 }
+
 .column.-small > :not(:last-child) {
   margin-bottom: 1rem;
 }
+
 .column.-tight > :not(:last-child) {
   margin-bottom: 0;
 }
@@ -120,15 +135,19 @@ code {
   display: flex;
   align-items: center;
 }
+
 .row.-equal > * {
   flex-grow: 1;
 }
+
 .row > :not(:last-child) {
   margin-right: 2rem;
 }
+
 .row.-small > :not(:last-child) {
   margin-right: 1rem;
 }
+
 .row.-tight > :not(:last-child) {
   margin-right: 0;
 }
@@ -151,6 +170,7 @@ code {
   font-size: 2rem;
   text-align: center;
 }
+
 .appHeader_title {
   font-size: 8rem;
   font-weight: bold;
@@ -158,8 +178,9 @@ code {
 }
 
 .nameCol {
-    width: 8rem;
+  width: 8rem;
 }
+
 .previewCol {
   width: calc(4 * var(--colorSwatchWidth));
   height: var(--colorSwatchHeight);
