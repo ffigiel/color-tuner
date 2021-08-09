@@ -2,6 +2,7 @@
   "dependencies": {
     "elm": "*",
     "elm-analyse": "^0.16.5",
+    "elm-review": "^2.5.5",
     "snowpack": "^3.5.9",
     "snowpack-plugin-elm": "^0.4.3"
   }
