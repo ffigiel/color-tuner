@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Dict
 import Parsers
-import Types exposing (..)
+import Types exposing (Model, Msg(..))
 import View exposing (view)
 
 
@@ -14,7 +14,7 @@ import View exposing (view)
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = init |> (\m -> update (GotInputText m.inputText) m)
+        { init = Types.init |> (\m -> update (GotInputText m.inputText) m)
         , view = view
         , update = update
         }
@@ -49,16 +49,17 @@ update msg model =
             let
                 updateItem item =
                     let
-                        component =
-                            getThemeColorComponent hsl item.components
-
                         newComponents =
                             case String.toFloat s of
                                 Just value ->
-                                    setComponentValue (Just s) hsl value item.components
+                                    Types.setComponentValue (Just s) hsl value item.components
 
                                 Nothing ->
-                                    setThemeColorComponent hsl
+                                    let
+                                        component =
+                                            Types.getThemeColorComponent hsl item.components
+                                    in
+                                    Types.setThemeColorComponent hsl
                                         { component
                                             | input = s
                                             , valid = False
@@ -66,7 +67,7 @@ update msg model =
                                         item.components
                     in
                     { item
-                        | newColor = colorFromComponents newComponents
+                        | newColor = Types.colorFromComponents newComponents
                         , components = newComponents
                     }
             in
@@ -80,10 +81,10 @@ update msg model =
                 updateItem item =
                     let
                         newComponents =
-                            setComponentValue Nothing hsl value item.components
+                            Types.setComponentValue Nothing hsl value item.components
                     in
                     { item
-                        | newColor = colorFromComponents newComponents
+                        | newColor = Types.colorFromComponents newComponents
                         , components = newComponents
                     }
             in
@@ -100,16 +101,16 @@ update msg model =
                 updateItem item =
                     let
                         component =
-                            getThemeColorComponent hsl item.components
+                            Types.getThemeColorComponent hsl item.components
 
                         newValue =
                             component.value + d
 
                         newComponents =
-                            setComponentValue Nothing hsl newValue item.components
+                            Types.setComponentValue Nothing hsl newValue item.components
                     in
                     { item
-                        | newColor = colorFromComponents newComponents
+                        | newColor = Types.colorFromComponents newComponents
                         , components = newComponents
                     }
             in

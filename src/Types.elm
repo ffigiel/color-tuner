@@ -3,6 +3,8 @@ module Types exposing
     , Model
     , Msg(..)
     , ThemeColor
+    , ThemeColorComponent
+    , ThemeColorComponents
     , colorFromComponents
     , componentFromValue
     , getThemeColorComponent

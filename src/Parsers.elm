@@ -104,6 +104,7 @@ rgbColorParser =
         |. Parser.symbol ")"
 
 
+optionalComma : Parser ()
 optionalComma =
     Parser.oneOf
         [ Parser.succeed ()

@@ -5,7 +5,7 @@ import Html as H exposing (Attribute, Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Round
-import Types exposing (..)
+import Types exposing (HSL(..), Model, Msg(..), ThemeColor)
 
 
 column : List (Attribute msg) -> List (Html msg) -> Html msg
@@ -83,7 +83,7 @@ appView : Model -> Html Msg
 appView model =
     let
         themeColors =
-            getThemeColors model
+            Types.getThemeColors model
     in
     column
         [ HA.style "flex-grow" "1" ]
@@ -132,7 +132,7 @@ themeColorsHeaderView : Maybe HSL -> Html Msg
 themeColorsHeaderView zoom =
     let
         components =
-            List.map compView hslComponents
+            List.map compView Types.hslComponents
 
         compView comp =
             let
@@ -147,7 +147,7 @@ themeColorsHeaderView zoom =
                 , HA.style "justify-content" "center"
                 ]
                 [ H.span []
-                    [ H.text <| hslToString comp
+                    [ H.text <| Types.hslToString comp
                     ]
                 , H.button
                     [ HA.type_ "button"
@@ -231,7 +231,7 @@ themeColorView : Maybe HSL -> ThemeColor -> Html Msg
 themeColorView zoom item =
     let
         rangeInputs =
-            hslComponents
+            Types.hslComponents
                 |> List.filterMap
                     (\hsl ->
                         if zoom == Nothing || zoom == Just hsl then
@@ -244,7 +244,7 @@ themeColorView zoom item =
         rangeInputView hsl =
             let
                 component =
-                    getThemeColorComponent hsl item.components
+                    Types.getThemeColorComponent hsl item.components
             in
             rowSmall [ HA.class "equalFill" ]
                 [ themeColorComponentRangeInput
@@ -380,7 +380,7 @@ outputView colors =
         toCssValue item =
             item.name
                 ++ ": "
-                ++ rgbToString item.newColor
+                ++ Types.rgbToString item.newColor
                 ++ ";"
     in
     columnTight []
