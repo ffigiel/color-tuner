@@ -138,6 +138,7 @@ code {
 
 .row.-equal > * {
   flex-grow: 1;
+  flex-basis: 0;
 }
 
 .row > :not(:last-child) {
@@ -179,6 +180,7 @@ code {
 
 .nameCol {
   width: 8rem;
+  height: var(--colorSwatchHeight);
 }
 
 .previewCol {
@@ -216,4 +218,23 @@ code {
 
 .header_hidden {
   opacity: 0.4;
+}
+
+.columnCell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--colorSwatchHeight);
+}
+
+.appControls {
+  display: grid;
+  column-gap: 2rem;
+  grid-template-columns: auto 1fr auto;
+}
+
+.appControls_colorComponent {
+  display: grid;
+  column-gap: 1rem;
+  grid-template-columns: auto 5rem;
 }

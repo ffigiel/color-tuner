@@ -13,14 +13,27 @@ column attrs children =
     H.div (HA.class "column" :: attrs) children
 
 
-columnSmall : List (Attribute msg) -> List (Html msg) -> Html msg
-columnSmall attrs children =
-    H.div (HA.class "column -small" :: attrs) children
+
+{-
+   columnSmall : List (Attribute msg) -> List (Html msg) -> Html msg
+   columnSmall attrs children =
+       H.div (HA.class "column -small" :: attrs) children
+-}
 
 
 columnTight : List (Attribute msg) -> List (Html msg) -> Html msg
 columnTight attrs children =
     H.div (HA.class "column -tight" :: attrs) children
+
+
+columnCell : List (Attribute msg) -> List (Html msg) -> Html msg
+columnCell attrs children =
+    H.div (HA.class "columnCell" :: attrs) children
+
+
+columnCellText : String -> Html msg
+columnCellText text =
+    columnCell [] [ H.p [] [ H.text text ] ]
 
 
 row : List (Attribute msg) -> List (Html msg) -> Html msg
@@ -119,159 +132,166 @@ themeColorsView themeColors zoom =
             [ H.text "No colors found." ]
 
     else
-        columnSmall []
-            [ themeColorsHeaderView zoom
-            , columnTight []
-                (themeAverageView themeColors zoom
-                    :: List.map (themeColorView zoom) themeColors
-                )
+        H.div
+            [ HA.class "appControls" ]
+            [ colColorNames themeColors
+            , colInputs zoom themeColors
+            , colPreview themeColors
             ]
 
 
-themeColorsHeaderView : Maybe HSL -> Html Msg
-themeColorsHeaderView zoom =
-    let
-        components =
-            List.map compView Types.hslComponents
-
-        compView comp =
-            let
-                isHidden =
-                    zoom /= Nothing && zoom /= Just comp
-            in
-            rowSmall
-                [ HA.classList
-                    [ ( "equalFill", True )
-                    , ( "header_hidden", isHidden )
-                    ]
-                , HA.style "justify-content" "center"
-                ]
-                [ H.span []
-                    [ H.text <| Types.hslToString comp
-                    ]
-                , H.button
-                    [ HA.type_ "button"
-                    , HA.classList [ ( "-active", zoom == Just comp ) ]
-                    , HE.onClick (ToggleZoom comp)
-                    ]
-                    [ H.text "🔍" ]
-                ]
-
-        children =
-            H.div [ HA.class "nameCol" ] [ H.text "Color" ]
-                :: components
-                ++ [ H.div [ HA.class "previewCol" ]
-                        [ H.text "Preview " ]
-                   ]
-    in
-    row [ HA.style "text-align" "center" ]
-        children
-
-
-themeAverageView : List ThemeColor -> Maybe HSL -> Html Msg
-themeAverageView themeColors zoom =
-    let
-        numColors =
-            toFloat <| List.length themeColors
-
-        ( totH, totS, totL ) =
-            List.foldl
-                (\color ( h, s, l ) ->
-                    ( h + color.components.h.value
-                    , s + color.components.s.value
-                    , l + color.components.l.value
-                    )
+colColorNames : List ThemeColor -> Html Msg
+colColorNames themeColors =
+    columnTight []
+        ([ columnCellText "Color"
+         , columnCellText "Average"
+         ]
+            ++ List.map
+                (\c ->
+                    columnCell
+                        [ HA.class "nameCol"
+                        ]
+                        [ H.code [] [ H.text c.name ] ]
                 )
-                ( 0, 0, 0 )
                 themeColors
+        )
 
-        ( avgH, avgS, avgL ) =
-            ( totH / numColors, totS / numColors, totL / numColors )
 
-        rangeInputs =
-            [ ( Hue, avgH ), ( Saturation, avgS ), ( Lightness, avgL ) ]
-                |> List.filterMap
-                    (\( hsl, avg ) ->
-                        if zoom == Nothing || zoom == Just hsl then
-                            Just <| rangeInputView hsl avg
+colInputs : Maybe HSL -> List ThemeColor -> Html Msg
+colInputs zoom themeColors =
+    H.div []
+        [ row [ HA.class "-equal" ]
+            (List.map (colComponentHeader zoom) Types.hslComponents)
+        , row [ HA.class "-equal" ]
+            (List.map (colComponent zoom themeColors) Types.hslComponents)
+        ]
 
-                        else
-                            Nothing
+
+colComponentHeader : Maybe HSL -> HSL -> Html Msg
+colComponentHeader zoom comp =
+    componentHeader zoom comp
+
+
+colComponent : Maybe HSL -> List ThemeColor -> HSL -> Html Msg
+colComponent zoom themeColors comp =
+    if zoom /= Nothing && zoom /= Just comp then
+        H.text ""
+
+    else
+        let
+            compAvg =
+                List.foldl
+                    (\color sum ->
+                        color
+                            |> .components
+                            |> Types.getThemeColorComponent comp
+                            |> .value
+                            |> (+) sum
                     )
-
-        rangeInputView hsl avg =
-            rowSmall [ HA.class "equalFill" ]
-                [ themeColorComponentRangeInput
-                    { hsl = hsl
-                    , onChange = GotAverageRangeInput hsl avg
-                    , value = avg
-                    }
-                , H.input
-                    [ HA.class "componentInput"
-                    , HA.readonly True
-                    , HA.value <| Round.round 2 avg
-                    ]
-                    []
-                ]
-
-        children =
-            H.div [ HA.class "nameCol", HA.style "text-align" "center" ]
-                [ H.text "Average" ]
-                :: rangeInputs
-                ++ [ row
-                        [ HA.class "previewCol"
-                        ]
-                        []
-                   ]
-    in
-    row [] children
+                    0
+                    themeColors
+                    |> (\sum -> sum / toFloat (List.length themeColors))
+        in
+        H.div
+            [ HA.class "appControls_colorComponent" ]
+            [ colComponentSliders comp compAvg themeColors
+            , colComponentInputs comp compAvg themeColors
+            ]
 
 
-themeColorView : Maybe HSL -> ThemeColor -> Html Msg
-themeColorView zoom item =
+colComponentSliders : HSL -> Float -> List ThemeColor -> Html Msg
+colComponentSliders comp compAvg themeColors =
+    columnTight []
+        (themeColorComponentRangeInput
+            { hsl = comp
+            , onChange = GotAverageRangeInput comp compAvg
+            , value = compAvg
+            }
+            :: List.map
+                (\color ->
+                    let
+                        component =
+                            Types.getThemeColorComponent comp color.components
+                    in
+                    themeColorComponentRangeInput
+                        { hsl = comp
+                        , onChange = GotHsluvRangeInput color.name comp
+                        , value = component.normalizedValue
+                        }
+                )
+                themeColors
+        )
+
+
+componentHeader : Maybe HSL -> HSL -> Html Msg
+componentHeader zoom comp =
     let
-        rangeInputs =
-            Types.hslComponents
-                |> List.filterMap
-                    (\hsl ->
-                        if zoom == Nothing || zoom == Just hsl then
-                            Just <| rangeInputView hsl
-
-                        else
-                            Nothing
-                    )
-
-        rangeInputView hsl =
-            let
-                component =
-                    Types.getThemeColorComponent hsl item.components
-            in
-            rowSmall [ HA.class "equalFill" ]
-                [ themeColorComponentRangeInput
-                    { hsl = hsl
-                    , onChange = GotHsluvRangeInput item.name hsl
-                    , value = component.normalizedValue
-                    }
-                , themeColorComponentInput
-                    { onChange = GotHsluvTextInput item.name hsl
-                    , value = component.input
-                    , valid = component.valid
-                    }
-                ]
-
-        children =
-            H.div [ HA.class "nameCol" ]
-                [ H.code [] [ H.text item.name ] ]
-                :: rangeInputs
-                ++ [ rowTight []
-                        [ colorSwatch item.originalColor
-                        , colorSwatch item.newColor
-                        , textSwatch item.originalColor
-                        , textSwatch item.newColor
-                        ]
-                   ]
+        isHidden =
+            zoom /= Nothing && zoom /= Just comp
     in
-    row [] children
+    columnCell
+        []
+        [ rowSmall
+            [ HA.classList
+                [ ( "header_hidden", isHidden )
+                ]
+            ]
+            [ H.span []
+                [ H.text <| Types.hslToString comp
+                ]
+            , H.button
+                [ HA.type_ "button"
+                , HA.classList [ ( "-active", zoom == Just comp ) ]
+                , HE.onClick (ToggleZoom comp)
+                ]
+                [ H.text "🔍" ]
+            ]
+        ]
+
+
+colComponentInputs : HSL -> Float -> List ThemeColor -> Html Msg
+colComponentInputs comp compAvg themeColors =
+    columnTight []
+        (columnCell []
+            [ H.input
+                [ HA.class "componentInput"
+                , HA.readonly True
+                , HA.value <| Round.round 2 compAvg
+                ]
+                []
+            ]
+            :: List.map
+                (\color ->
+                    let
+                        component =
+                            Types.getThemeColorComponent comp color.components
+                    in
+                    themeColorComponentInput
+                        { onChange = GotHsluvTextInput color.name comp
+                        , value = component.input
+                        , valid = component.valid
+                        }
+                )
+                themeColors
+        )
+
+
+colPreview : List ThemeColor -> Html Msg
+colPreview themeColors =
+    columnTight []
+        (columnCellText "Preview"
+            :: columnCellText ""
+            :: List.map
+                (\c ->
+                    rowTight []
+                        [ colorSwatch c.originalColor
+                        , colorSwatch c.newColor
+                        , textSwatch c.originalColor
+                        , textSwatch c.newColor
+                        ]
+                )
+                themeColors
+        )
 
 
 colorSwatch : Color -> Html Msg
@@ -316,9 +336,11 @@ themeColorComponentInput { onChange, value, valid } =
             else
                 HA.class "inputWithError" :: baseAttrs
     in
-    H.input
-        attrs
-        []
+    columnCell []
+        [ H.input
+            attrs
+            []
+        ]
 
 
 themeColorComponentRangeInput :
@@ -334,15 +356,17 @@ themeColorComponentRangeInput { hsl, onChange, value } =
                 _ ->
                     100
     in
-    H.input
-        [ HA.type_ "range"
-        , HE.onInput <| String.toFloat >> Maybe.withDefault value >> onChange
-        , HA.min "0"
-        , HA.max <| String.fromInt sliderMax
-        , HA.step "0.01"
-        , HA.value <| String.fromFloat value
+    columnCell []
+        [ H.input
+            [ HA.type_ "range"
+            , HE.onInput <| String.toFloat >> Maybe.withDefault value >> onChange
+            , HA.min "0"
+            , HA.max <| String.fromInt sliderMax
+            , HA.step "0.01"
+            , HA.value <| String.fromFloat value
+            ]
+            []
         ]
-        []
 
 
 inputView : Bool -> String -> Html Msg
