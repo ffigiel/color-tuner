@@ -253,12 +253,8 @@ colComponentInputs : HSL -> Float -> List ThemeColor -> Html Msg
 colComponentInputs comp compAvg themeColors =
     columnTight []
         (columnCell []
-            [ H.input
-                [ HA.class "componentInput"
-                , HA.readonly True
-                , HA.value <| Round.round 2 compAvg
-                ]
-                []
+            [ H.code []
+                [ H.text <| Round.round 2 compAvg ]
             ]
             :: List.map
                 (\color ->
