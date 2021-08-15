@@ -282,8 +282,6 @@ colPreview themeColors =
                     rowTight []
                         [ colorSwatch c.originalColor
                         , colorSwatch c.newColor
-                        , textSwatch c.originalColor
-                        , textSwatch c.newColor
                         ]
                 )
                 themeColors
@@ -297,17 +295,6 @@ colorSwatch color =
         , HA.class "previewSwatch"
         ]
         [ H.text "" ]
-
-
-textSwatch : Color -> Html Msg
-textSwatch color =
-    H.div
-        [ HA.style "color" <| Color.toCssString color
-        , HA.class "previewSwatch"
-        , HA.class "gridCenter"
-        ]
-        [ H.div [] [ H.text "Aa" ]
-        ]
 
 
 themeColorComponentInput :

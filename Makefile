@@ -24,4 +24,4 @@ dev:
 	npx snowpack dev
 
 lint:
-	npx elm-analyse
+	npx elm-review --fix-all

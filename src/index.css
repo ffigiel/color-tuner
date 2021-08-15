@@ -184,7 +184,7 @@ code {
 }
 
 .previewCol {
-  width: calc(4 * var(--colorSwatchWidth));
+  width: calc(2 * var(--colorSwatchWidth));
   height: var(--colorSwatchHeight);
 }
 
