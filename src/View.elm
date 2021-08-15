@@ -149,7 +149,7 @@ colColorNames themeColors =
             ++ List.map
                 (\c ->
                     columnCell
-                        [ HA.class "nameCol"
+                        [ HA.class "nameCell"
                         ]
                         [ H.code [] [ H.text c.name ] ]
                 )

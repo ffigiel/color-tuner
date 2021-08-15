@@ -178,11 +178,6 @@ code {
   justify-content: center;
 }
 
-.nameCol {
-  width: 8rem;
-  height: var(--colorSwatchHeight);
-}
-
 .previewCol {
   width: calc(2 * var(--colorSwatchWidth));
   height: var(--colorSwatchHeight);
@@ -237,4 +232,14 @@ code {
   display: grid;
   column-gap: 1rem;
   grid-template-columns: auto 4.5rem;
+}
+
+.nameCell {
+  white-space: nowrap;
+  height: var(--colorSwatchHeight);
+  justify-content: start;
+}
+
+.nameCell code {
+  width: auto;
 }
