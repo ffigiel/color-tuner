@@ -127,7 +127,7 @@ hslToString c =
 
 componentFromValue : HSL -> Float -> ThemeColorComponent
 componentFromValue hsl v =
-    { input = Round.round 2 v
+    { input = Round.round 1 v
     , valid = True
     , value = v
     , normalizedValue = normalizeComponentValue hsl v
@@ -145,7 +145,7 @@ setComponentValue mInput hsl v cs =
 
         newC =
             { c
-                | input = Maybe.withDefault (Round.round 2 normalized) mInput
+                | input = Maybe.withDefault (Round.round 1 normalized) mInput
                 , valid = True
                 , value = v
                 , normalizedValue = normalized

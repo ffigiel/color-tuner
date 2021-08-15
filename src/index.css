@@ -213,7 +213,7 @@ code {
 }
 
 .componentInput {
-  width: 5rem;
+  width: 4.5rem;
 }
 
 .header_hidden {
@@ -236,5 +236,5 @@ code {
 .appControls_colorComponent {
   display: grid;
   column-gap: 1rem;
-  grid-template-columns: auto 5rem;
+  grid-template-columns: auto 4.5rem;
 }

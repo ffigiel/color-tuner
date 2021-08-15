@@ -254,7 +254,7 @@ colComponentInputs comp compAvg themeColors =
     columnTight []
         (columnCell []
             [ H.code []
-                [ H.text <| Round.round 2 compAvg ]
+                [ H.text <| Round.round 1 compAvg ]
             ]
             :: List.map
                 (\color ->
@@ -358,7 +358,7 @@ themeColorComponentRangeInput { hsl, onChange, value } =
             , HE.onInput <| String.toFloat >> Maybe.withDefault value >> onChange
             , HA.min "0"
             , HA.max <| String.fromInt sliderMax
-            , HA.step "0.01"
+            , HA.step "0.1"
             , HA.value <| String.fromFloat value
             ]
             []
