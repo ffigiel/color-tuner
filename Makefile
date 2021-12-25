@@ -17,11 +17,10 @@ deploy-pages: dist
 	git checkout main
 
 dist: clean
-	npx snowpack build
-	./postBuild.sh
+	npx vite build
 
 dev:
-	npx snowpack dev
+	npx vite
 
 lint:
 	npx elm-review --fix-all
