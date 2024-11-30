@@ -1,5 +1,22 @@
 /* I will clean up these styles one day... */
 
+/* FONTS */
+
+@font-face {
+  font-family: 'Balsamiq Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(/fonts/BalsamiqSans-Regular.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Balsamiq Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url(/fonts/BalsamiqSans-Bold.ttf) format('truetype');
+}
+
 /* RESET */
 
 html,
